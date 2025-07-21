@@ -6,8 +6,8 @@
     "build": "next build && next export",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start",
-    "exports":"next export"
+    "start": "next start"
+    
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
