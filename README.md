@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 # DevHeaven
 
 DevHeaven is a full-stack platform for recruiters, resources, users, and messaging. This project includes a Node.js/Express backend and a Next.js/Tailwind client.
