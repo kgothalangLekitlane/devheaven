@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Code2, MapPin, Calendar, Github, Linkedin, Twitter, Mail, Edit, Star, Eye, GitFork } from "lucide-react"
 import Link from "next/link"
 
+import styles from "./page.module.css"
+
 export default function ProfilePage() {
   const userProjects = [
     {
@@ -175,6 +177,9 @@ export default function ProfilePage() {
                   </Button>
                 </div>
 
+                <Button className="w-full bg-purple-600 hover:bg-purple-700 mb-2" asChild>
+                  <Link href="/auth/signup">Create Account</Link>
+                </Button>
                 <Button className="w-full bg-purple-600 hover:bg-purple-700">Connect</Button>
               </CardContent>
             </Card>
@@ -377,12 +382,12 @@ export default function ProfilePage() {
                         <div key={skill.name}>
                           <div className="flex justify-between mb-2">
                             <span className="font-medium">{skill.name}</span>
-                            <span className="text-sm text-gray-500">{skill.level}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className="bg-purple-600 h-2 rounded-full transition-all duration-300"
                               style={{ width: `${skill.level}%` }}
+                              data-skill-level={skill.level}
                             ></div>
                           </div>
                         </div>
