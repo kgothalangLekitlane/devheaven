@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // 👈 THIS enables static export
+  // output: 'export', // Removed for dynamic build on Vercel
 
   eslint: {
     ignoreDuringBuilds: true,
