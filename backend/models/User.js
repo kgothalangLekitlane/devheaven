@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   profileImage: { type: String },
+  skills: [{ type: String }],
+  location: { type: String },
+  experience: { type: Number },
   createdAt: { type: Date, default: Date.now }
 })
 

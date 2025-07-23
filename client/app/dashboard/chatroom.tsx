@@ -1,5 +1,6 @@
 import * as React from "react"
-import { io, Socket } from "socket.io-client"
+import io from "socket.io-client"
+import type { Socket } from "socket.io-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -17,7 +18,7 @@ export default function ChatRoom() {
   const [input, setInput] = React.useState<string>("")
   const [user, setUser] = React.useState<string>("")
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null)
-  const socketRef = React.useRef<Socket | null>(null)
+  const socketRef = React.useRef<ReturnType<typeof io> | null>(null)
 
   React.useEffect(() => {
     // Only connect on client
