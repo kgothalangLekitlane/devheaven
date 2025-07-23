@@ -302,7 +302,7 @@ export default function ProfilePage() {
                       <div className="aspect-video bg-gray-100 overflow-hidden rounded-t-lg">
                         <img
                           src={project.image || "/placeholder.svg"}
-                          alt={project.title}
+                          alt={project.title || "Project image"}
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </div>
