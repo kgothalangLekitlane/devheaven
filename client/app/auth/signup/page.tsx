@@ -40,18 +40,32 @@ export default function SignUpPage() {
     setError("")
     setSuccess("")
     // Basic validation
-    if (!form.firstName || !form.lastName || !form.email || !form.username || !form.password || !form.confirmPassword)
-      return setError("All fields are required.")
+    if (!form.firstName || !form.lastName || !form.email || !form.username || !form.password || !form.confirmPassword) {
+      setError("All fields are required.");
+      return;
+    }
     // Email format validation
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError("Invalid email format.")
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) {
+      setError("Invalid email format.");
+      return;
+    }
     // Password strength validation
-    if (form.password.length < 8) return setError("Password must be at least 8 characters.")
-    if (!/[A-Z]/.test(form.password) || !/[a-z]/.test(form.password) || !/[0-9]/.test(form.password))
-      return setError("Password must contain uppercase, lowercase, and a number.")
-    if (!form.terms) return setError("You must agree to the terms.")
-    if (form.password !== form.confirmPassword) return setError("Passwords do not match.")
-    // File validation (optional)
-    // if (!file) return setError("Please upload a profile image.")
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(form.password) || !/[a-z]/.test(form.password) || !/[0-9]/.test(form.password)) {
+      setError("Password must contain uppercase, lowercase, and a number.");
+      return;
+    }
+    if (!form.terms) {
+      setError("You must agree to the terms.");
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
     setLoading(true)
     try {
       const formData = new FormData()
@@ -65,12 +79,17 @@ export default function SignUpPage() {
         body: formData
       })
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || "Registration failed.")
+        let data = null;
+        try { data = await res.json(); } catch {}
+        throw new Error(data?.message || `Registration failed. (${res.status})`)
       }
       setSuccess("Account created! Redirecting to login...")
-      setTimeout(() => router.push("/auth/login"), 1500)
+      setTimeout(() => {
+        setSuccess("");
+        router.replace("/auth/login");
+      }, 1200)
     } catch (err) {
+      setLoading(false);
       if (err instanceof Error && err.message) {
         setError(err.message)
       } else {
