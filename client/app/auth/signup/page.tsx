@@ -21,13 +21,18 @@ export default function SignUpPage() {
     confirmPassword: "",
     terms: false
   })
+  const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const router = useRouter()
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value, type, checked } = e.target
-    setForm(f => ({ ...f, [id]: type === "checkbox" ? checked : value }))
+    const { id, value, type, checked, files } = e.target
+    if (type === "file" && files && files[0]) {
+      setFile(files[0])
+    } else {
+      setForm(f => ({ ...f, [id]: type === "checkbox" ? checked : value }))
+    }
   }
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -45,9 +50,24 @@ export default function SignUpPage() {
       return setError("Password must contain uppercase, lowercase, and a number.")
     if (!form.terms) return setError("You must agree to the terms.")
     if (form.password !== form.confirmPassword) return setError("Passwords do not match.")
+    // File validation (optional)
+    // if (!file) return setError("Please upload a profile image.")
     setLoading(true)
     try {
-      const res = await registerUser(form)
+      const formData = new FormData()
+      Object.entries(form).forEach(([key, value]) => {
+        formData.append(key, value as string)
+      })
+      if (file) formData.append("profile", file)
+      // Use fetch directly for multipart upload
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+        method: "POST",
+        body: formData
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.message || "Registration failed.")
+      }
       setSuccess("Account created! Redirecting to login...")
       setTimeout(() => router.push("/auth/login"), 1500)
     } catch (err) {
@@ -81,6 +101,11 @@ export default function SignUpPage() {
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input id="lastName" placeholder="Doe" value={form.lastName} onChange={handleChange} />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="profile">Profile Image</Label>
+              <Input id="profile" type="file" accept="image/*" onChange={handleChange} />
+              {file && <span className="text-xs text-gray-500">Selected: {file.name}</span>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -126,11 +151,19 @@ export default function SignUpPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" disabled title="Not implemented">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/github`}
+            >
               <Github className="h-4 w-4 mr-2" />
               GitHub
             </Button>
-            <Button variant="outline" disabled title="Not implemented">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`}
+            >
               <Mail className="h-4 w-4 mr-2" />
               Google
             </Button>
