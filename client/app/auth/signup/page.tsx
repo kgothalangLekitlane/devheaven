@@ -1,3 +1,7 @@
+
+"use client"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -5,8 +9,56 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Code2, Github, Mail } from "lucide-react"
 import Link from "next/link"
+import { registerUser } from "@/lib/api"
 
 export default function SignUpPage() {
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+    terms: false
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const router = useRouter()
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value, type, checked } = e.target
+    setForm(f => ({ ...f, [id]: type === "checkbox" ? checked : value }))
+  }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (loading) return // Prevent multiple submissions
+    setError("")
+    setSuccess("")
+    // Basic validation
+    if (!form.firstName || !form.lastName || !form.email || !form.username || !form.password || !form.confirmPassword)
+      return setError("All fields are required.")
+    // Email format validation
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError("Invalid email format.")
+    // Password strength validation
+    if (form.password.length < 8) return setError("Password must be at least 8 characters.")
+    if (!/[A-Z]/.test(form.password) || !/[a-z]/.test(form.password) || !/[0-9]/.test(form.password))
+      return setError("Password must contain uppercase, lowercase, and a number.")
+    if (!form.terms) return setError("You must agree to the terms.")
+    if (form.password !== form.confirmPassword) return setError("Passwords do not match.")
+    setLoading(true)
+    try {
+      const res = await registerUser(form)
+      setSuccess("Account created! Redirecting to login...")
+      setTimeout(() => router.push("/auth/login"), 1500)
+    } catch (err) {
+      if (err instanceof Error && err.message) {
+        setError(err.message)
+      } else {
+        setError("Registration failed.")
+      }
+    }
+    setLoading(false)
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white/95 backdrop-blur-sm">
@@ -19,53 +71,52 @@ export default function SignUpPage() {
           <CardDescription>Create your account and start connecting with developers worldwide</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" placeholder="John" />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input id="firstName" placeholder="John" value={form.firstName} onChange={handleChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input id="lastName" placeholder="Doe" value={form.lastName} onChange={handleChange} />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" placeholder="Doe" />
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="john@example.com" value={form.email} onChange={handleChange} />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="john@example.com" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input id="username" placeholder="johndoe" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input id="confirmPassword" type="password" />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox id="terms" />
-            <Label htmlFor="terms" className="text-sm">
-              I agree to the{" "}
-              <Link href="/terms" className="text-purple-600 hover:underline">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" className="text-purple-600 hover:underline">
-                Privacy Policy
-              </Link>
-            </Label>
-          </div>
-
-          <Button className="w-full bg-purple-600 hover:bg-purple-700">Create Account</Button>
-
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" placeholder="johndoe" value={form.username} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" value={form.password} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input id="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="terms" checked={form.terms} onCheckedChange={checked => setForm(f => ({ ...f, terms: !!checked }))} />
+              <Label htmlFor="terms" className="text-sm">
+                I agree to the{" "}
+                <Link href="/terms" className="text-purple-600 hover:underline">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="text-purple-600 hover:underline">
+                  Privacy Policy
+                </Link>
+              </Label>
+            </div>
+            {error && <div className="text-red-600 text-sm text-center" role="alert">{error}</div>}
+            {success && <div className="text-green-600 text-sm text-center" role="status">{success}</div>}
+            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
+              {loading ? "Creating..." : "Create Account"}
+            </Button>
+          </form>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -74,18 +125,16 @@ export default function SignUpPage() {
               <span className="bg-white px-2 text-gray-500">Or continue with</span>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline">
+            <Button variant="outline" disabled title="Not implemented">
               <Github className="h-4 w-4 mr-2" />
               GitHub
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" disabled title="Not implemented">
               <Mail className="h-4 w-4 mr-2" />
               Google
             </Button>
           </div>
-
           <div className="text-center text-sm">
             Already have an account?{" "}
             <Link href="/auth/login" className="text-purple-600 hover:underline">
