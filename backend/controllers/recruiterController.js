@@ -36,9 +36,8 @@ const getJobs = async (req, res) => {
   }
 }
 
-module.exports = { createRecruiter, postJob, getJobs }
 const getRecruiters = (req, res) => {
     res.json([{ id: 1, name: "Recruiter A" }, { id: 2, name: "Recruiter B" }]);
 };
 
-module.exports = { getRecruiters };
+module.exports = { getRecruiters, createRecruiter, postJob, getJobs };
