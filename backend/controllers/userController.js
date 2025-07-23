@@ -15,9 +15,8 @@ const searchCandidates = async (req, res) => {
   }
 }
 
-module.exports.searchCandidates = searchCandidates
 const getUsers = (req, res) => {
     res.json([{ id: 1, name: "User A" }, { id: 2, name: "User B" }]);
 };
 
-module.exports = { getUsers };
+module.exports = { getUsers, searchCandidates };
