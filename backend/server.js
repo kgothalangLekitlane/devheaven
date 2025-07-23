@@ -14,6 +14,7 @@ app.use("/api/users", require("./routes/users"));
 app.use("/api/resources", require("./routes/resources"));
 app.use("/api/recruiters", require("./routes/recruiters"));
 app.use("/api/messages", require("./routes/messages"));
+app.use("/api", require("./routes/api"));
 
 const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGO_URI)
