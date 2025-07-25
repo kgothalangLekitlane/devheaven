@@ -80,6 +80,11 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
           <CardDescription>Sign in to your account to continue your developer journey</CardDescription>
+          <div className="mt-2 p-2 bg-blue-50 rounded-md">
+            <p className="text-xs text-blue-700">
+              Demo Mode: Use any email/password to explore the app
+            </p>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
