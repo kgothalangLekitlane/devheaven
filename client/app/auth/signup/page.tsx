@@ -97,7 +97,7 @@ export default function SignUpPage() {
           <CardDescription>Create your account and start connecting with developers worldwide</CardDescription>
           <div className="mt-2 p-2 bg-blue-50 rounded-md">
             <p className="text-xs text-blue-700">
-              Demo Mode: Fill out the form to explore the app
+              Demo Mode: Fill out the form to explore the app (no real account created)
             </p>
           </div>
         </CardHeader>
