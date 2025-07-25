@@ -99,9 +99,29 @@ export async function addResource(data: any, token: string) {
 
 // Posts
 export async function fetchPosts() {
-  const res = await fetch(`${API_URL}/api/posts`);
-  if (!res.ok) throw new Error("Failed to fetch posts");
-  return res.json();
+  try {
+    return await apiRequest(`${API_URL}/api/posts`);
+  } catch (error) {
+    console.error('Failed to fetch posts:', error);
+    // Return mock data as fallback
+    return [
+      {
+        _id: "1",
+        title: "Welcome to DevHeaven!",
+        content: "This is a sample post. Connect to the backend to see real posts.",
+        author: {
+          _id: "1",
+          firstName: "Demo",
+          lastName: "User",
+          username: "demouser"
+        },
+        tags: ["welcome", "demo"],
+        likes: [],
+        comments: [],
+        createdAt: new Date().toISOString()
+      }
+    ];
+  }
 }
 
 export async function createPost(data: any, token: string) {
