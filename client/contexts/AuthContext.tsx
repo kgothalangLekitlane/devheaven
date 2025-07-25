@@ -32,11 +32,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for stored auth data on mount
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
-    
+
     if (storedToken && storedUser) {
       try {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+
+        // If it's a demo token, add a console message
+        if (storedToken.startsWith('demo-')) {
+          console.log('Demo mode active - backend not connected');
+        }
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         localStorage.removeItem('authToken');
