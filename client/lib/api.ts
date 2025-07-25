@@ -32,17 +32,14 @@ export async function fetchUsers(token: string) {
   return res.json();
 }
 
-// Messages
-export async function fetchMessages() {
-  const res = await fetch(`${API_URL}/api/messages`);
-  if (!res.ok) throw new Error("Failed to fetch messages");
-  return res.json();
-}
-
-export async function postMessage(data: any) {
+// Messages (deprecated - use the newer authenticated versions below)
+export async function postMessage(data: any, token: string) {
   const res = await fetch(`${API_URL}/api/messages`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
     body: JSON.stringify(data)
   });
   if (!res.ok) throw new Error("Failed to post message");
