@@ -65,29 +65,56 @@ export default function LoginPage() {
           <CardDescription>Sign in to your account to continue your developer journey</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email or Username</Label>
-            <Input id="email" placeholder="john@example.com or johndoe" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Checkbox id="remember" />
-              <Label htmlFor="remember" className="text-sm">
-                Remember me
-              </Label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="john@example.com"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
             </div>
-            <Link href="/auth/forgot-password" className="text-sm text-purple-600 hover:underline">
-              Forgot password?
-            </Link>
-          </div>
 
-          <Button className="w-full bg-purple-600 hover:bg-purple-700">Sign In</Button>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={form.remember}
+                  onCheckedChange={checked => setForm(f => ({ ...f, remember: !!checked }))}
+                />
+                <Label htmlFor="remember" className="text-sm">
+                  Remember me
+                </Label>
+              </div>
+              <Link href="/auth/forgot-password" className="text-sm text-purple-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+
+            {error && <div className="text-red-600 text-sm text-center" role="alert">{error}</div>}
+
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              disabled={loading}
+            >
+              {loading ? "Signing In..." : "Sign In"}
+            </Button>
+          </form>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
