@@ -35,9 +35,28 @@ export default function Dashboard() {
     try {
       const data = await fetchPosts();
       setPosts(data);
+      setError(""); // Clear any previous errors
     } catch (err) {
-      setError("Failed to load posts");
+      setError("Backend connection issue. Showing demo data.");
       console.error(err);
+      // Load demo data as fallback
+      setPosts([
+        {
+          _id: "demo1",
+          title: "Welcome to DevHeaven!",
+          content: "This is a demo post. To see real posts, ensure the backend server is running on localhost:5000.",
+          author: {
+            _id: "demo",
+            firstName: "Demo",
+            lastName: "User",
+            username: "demouser"
+          },
+          tags: ["welcome", "demo"],
+          likes: [],
+          comments: [],
+          createdAt: new Date().toISOString()
+        }
+      ]);
     }
   };
 
