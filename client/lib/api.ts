@@ -166,18 +166,27 @@ export async function fetchPosts() {
 }
 
 export async function createPost(data: any, token: string) {
-  try {
-    return await apiRequest(`${API_URL}/api/posts`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`
+  // Demo mode - simulate successful post creation
+  console.log('Demo mode: Creating post', data);
+
+  return {
+    message: "Post created",
+    post: {
+      _id: "demo-" + Date.now(),
+      title: data.title,
+      content: data.content,
+      author: {
+        _id: "demo-user",
+        firstName: "Demo",
+        lastName: "User",
+        username: "demouser"
       },
-      body: JSON.stringify(data)
-    });
-  } catch (error) {
-    console.error('Failed to create post:', error);
-    throw new Error('Unable to create post. Please check your connection and try again.');
-  }
+      tags: data.tags || [],
+      likes: [],
+      comments: [],
+      createdAt: new Date().toISOString()
+    }
+  };
 }
 
 // Jobs
