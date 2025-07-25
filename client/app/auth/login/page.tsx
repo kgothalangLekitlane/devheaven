@@ -38,6 +38,38 @@ export default function LoginPage() {
     }
 
     setLoading(true);
+
+    // Test backend availability first
+    let backendAvailable = false;
+    try {
+      const testResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/posts`, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+      backendAvailable = true;
+    } catch (testError) {
+      console.log('Backend not available, using demo mode');
+      backendAvailable = false;
+    }
+
+    if (!backendAvailable) {
+      // Demo mode - create a mock user session
+      const demoUser = {
+        id: "demo-user",
+        firstName: "Demo",
+        lastName: "User",
+        email: form.email,
+        username: "demouser"
+      };
+      const demoToken = "demo-token-12345";
+
+      login(demoToken, demoUser);
+      router.push("/dashboard");
+      setLoading(false);
+      return;
+    }
+
+    // Backend is available, try real login
     try {
       const response = await loginUser({
         email: form.email,
@@ -48,9 +80,10 @@ export default function LoginPage() {
       login(response.token, response.user);
       router.push("/dashboard");
     } catch (err) {
-      // Handle connection errors with demo mode
-      if (err instanceof Error && err.message.includes('Unable to connect')) {
-        // Demo mode - create a mock user session
+      console.error('Login error:', err);
+
+      // If API call fails, fall back to demo mode
+      if (err instanceof TypeError || err.message.includes('fetch') || err.message.includes('Unable to connect')) {
         const demoUser = {
           id: "demo-user",
           firstName: "Demo",
