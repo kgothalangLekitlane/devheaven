@@ -1,3 +1,6 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -5,8 +8,51 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Code2, Github, Mail } from "lucide-react"
 import Link from "next/link"
+import { loginUser } from "@/lib/api"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function LoginPage() {
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    remember: false
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const { login } = useAuth();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value, type, checked } = e.target;
+    setForm(f => ({ ...f, [id]: type === "checkbox" ? checked : value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (loading) return;
+
+    setError("");
+    if (!form.email || !form.password) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await loginUser({
+        email: form.email,
+        password: form.password
+      });
+
+      // Login successful
+      login(response.token, response.user);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white/95 backdrop-blur-sm">
