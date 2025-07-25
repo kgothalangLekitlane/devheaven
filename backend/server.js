@@ -11,7 +11,9 @@ const app = express();
 app.use(cors({
   origin: [
     "https://devheaven1-dhxe.vercel.app",
-    "https://devheaven1-dhxe-fptcrtuie-kgothalang-lekitlanes-projects.vercel.app"
+    "https://devheaven1-dhxe-fptcrtuie-kgothalang-lekitlanes-projects.vercel.app",
+    "http://localhost:3000",
+    "https://localhost:3000"
   ],
   credentials: true
 }));
