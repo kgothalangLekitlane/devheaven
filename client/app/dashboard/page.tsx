@@ -1,3 +1,6 @@
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -6,8 +9,73 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Heart, MessageCircle, Share2, Code2, Briefcase, BookOpen, Search, Plus, Bell } from "lucide-react"
 import Link from "next/link"
+import { fetchPosts, createPost, likePost } from "@/lib/api"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function Dashboard() {
+  const { user, token, isLoading } = useAuth();
+  const [posts, setPosts] = useState([]);
+  const [newPost, setNewPost] = useState({ title: "", content: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (user) {
+      loadPosts();
+    }
+  }, [user, isLoading, router]);
+
+  const loadPosts = async () => {
+    try {
+      const data = await fetchPosts();
+      setPosts(data);
+    } catch (err) {
+      setError("Failed to load posts");
+      console.error(err);
+    }
+  };
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !newPost.title || !newPost.content) return;
+
+    setLoading(true);
+    try {
+      await createPost(newPost, token);
+      setNewPost({ title: "", content: "" });
+      loadPosts(); // Reload posts
+    } catch (err) {
+      setError("Failed to create post");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    if (!token) return;
+    try {
+      await likePost(postId, token);
+      loadPosts(); // Reload to update like counts
+    } catch (err) {
+      setError("Failed to like post");
+    }
+  };
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div>Loading...</div>
+    </div>;
+  }
+
+  if (!user) {
+    return null;
+  }
   const posts = [
     {
       id: 1,
