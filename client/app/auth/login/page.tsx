@@ -100,9 +100,9 @@ export default function LoginPage() {
                   Remember me
                 </Label>
               </div>
-              <Link href="/auth/forgot-password" className="text-sm text-purple-600 hover:underline">
-                Forgot password?
-              </Link>
+              <Link href="/auth/forgot-password" className="text-sm text-purple-600 hover:underline" prefetch={false}>
+              Forgot password?
+            </Link>
             </div>
 
             {error && <div className="text-red-600 text-sm text-center" role="alert">{error}</div>}
