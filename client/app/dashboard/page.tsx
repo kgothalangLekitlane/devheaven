@@ -68,9 +68,11 @@ export default function Dashboard() {
     try {
       await createPost(newPost, token);
       setNewPost({ title: "", content: "" });
+      setError(""); // Clear errors on success
       loadPosts(); // Reload posts
     } catch (err) {
-      setError("Failed to create post");
+      setError("Unable to create post. Backend server may be offline.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
