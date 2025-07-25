@@ -175,10 +175,10 @@ export default function Dashboard() {
                 Post
               </Button>
               <Bell className="h-6 w-6 text-gray-600 cursor-pointer hover:text-purple-600" />
-              <Link href="/messages">
+              <Link href="/messages" prefetch={false}>
                 <MessageCircle className="h-6 w-6 text-gray-600 cursor-pointer hover:text-purple-600" />
               </Link>
-              <Link href="/profile">
+              <Link href="/profile" prefetch={false}>
                 <Avatar className="h-8 w-8 cursor-pointer">
                   <AvatarImage src="/placeholder.svg?height=32&width=32" />
                   <AvatarFallback>JD</AvatarFallback>
