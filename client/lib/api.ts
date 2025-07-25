@@ -4,32 +4,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 // Helper function to handle fetch errors
 async function apiRequest(url: string, options: RequestInit = {}) {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    if (error instanceof TypeError || error.name === 'AbortError' || (error instanceof Error && error.message.includes('fetch'))) {
-      throw new Error('Unable to connect to server. Please check if the backend is running.');
-    }
-    throw error;
-  }
+  // For this environment, always throw connection error to trigger demo mode
+  throw new Error('Unable to connect to server. Using demo mode.');
 }
 
 // Auth
