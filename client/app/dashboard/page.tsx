@@ -176,12 +176,16 @@ export default function Dashboard() {
               <CardHeader>
                 <div className="flex items-center space-x-3">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src="/placeholder.svg?height=48&width=48" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarImage src={user?.profileImage || "/placeholder.svg?height=48&width=48"} />
+                    <AvatarFallback>
+                      {user?.firstName?.[0]}{user?.lastName?.[0]}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold">John Doe</h3>
-                    <p className="text-sm text-gray-600">Full Stack Developer</p>
+                    <h3 className="font-semibold">{user?.firstName} {user?.lastName}</h3>
+                    <p className="text-sm text-gray-600">
+                      {user?.location || "Developer"}
+                    </p>
                   </div>
                 </div>
               </CardHeader>
