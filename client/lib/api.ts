@@ -159,3 +159,43 @@ export async function sendMessage(data: any, token: string) {
   if (!res.ok) throw new Error("Failed to send message");
   return res.json();
 }
+
+// Get user profile by ID
+export async function fetchUserById(id: string) {
+  const res = await fetch(`${API_URL}/api/users/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch user");
+  return res.json();
+}
+
+// Like/unlike post
+export async function likePost(postId: string, token: string) {
+  const res = await fetch(`${API_URL}/api/posts/${postId}/like`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Failed to like post");
+  return res.json();
+}
+
+// Add comment to post
+export async function addComment(postId: string, text: string, token: string) {
+  const res = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ text })
+  });
+  if (!res.ok) throw new Error("Failed to add comment");
+  return res.json();
+}
+
+// Update messages to require authentication
+export async function fetchMessages(token: string) {
+  const res = await fetch(`${API_URL}/api/messages`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Failed to fetch messages");
+  return res.json();
+}
