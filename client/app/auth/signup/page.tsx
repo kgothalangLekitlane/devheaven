@@ -1,4 +1,3 @@
-
 "use client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -146,11 +145,11 @@ export default function SignUpPage() {
               <Checkbox id="terms" checked={form.terms} onCheckedChange={checked => setForm(f => ({ ...f, terms: !!checked }))} />
               <Label htmlFor="terms" className="text-sm">
                 I agree to the{" "}
-                <Link href="/terms" className="text-purple-600 hover:underline">
+                <Link href="/terms" className="text-purple-600 hover:underline" prefetch={false}>
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-purple-600 hover:underline">
+                <Link href="/privacy" className="text-purple-600 hover:underline" prefetch={false}>
                   Privacy Policy
                 </Link>
               </Label>
