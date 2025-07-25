@@ -38,13 +38,18 @@ export async function registerUser(data: any) {
 }
 
 export async function loginUser(data: any) {
-  const res = await fetch(`${API_URL}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error("Login failed");
-  return res.json(); // Should contain JWT token
+  try {
+    return await apiRequest(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  } catch (error) {
+    console.error('Login failed:', error);
+    if (error.message.includes('Unable to connect')) {
+      throw new Error('Unable to connect to server. Please try again later.');
+    }
+    throw new Error('Invalid email or password');
+  }
 }
 
 // Users (protected)
