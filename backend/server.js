@@ -11,7 +11,9 @@ const app = express();
 app.use(cors({
   origin: [
     "https://devheaven1-dhxe.vercel.app",
-    "https://devheaven1-dhxe-fptcrtuie-kgothalang-lekitlanes-projects.vercel.app"
+    "https://devheaven1-dhxe-fptcrtuie-kgothalang-lekitlanes-projects.vercel.app",
+    "http://localhost:3000",
+    "https://localhost:3000"
   ],
   credentials: true
 }));
@@ -19,6 +21,7 @@ app.use(express.json());
 
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
+app.use("/api/posts", require("./routes/posts"));
 app.use("/api/resources", require("./routes/resources"));
 app.use("/api/recruiters", require("./routes/recruiters"));
 app.use("/api/messages", require("./routes/messages"));

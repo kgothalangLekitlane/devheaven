@@ -122,22 +122,22 @@ export default function MessagesPage() {
                 <span className="text-2xl font-bold text-gray-900">DevHeaven</span>
               </Link>
               <div className="hidden md:flex items-center space-x-6">
-                <Link href="/dashboard" className="text-gray-600 hover:text-purple-600">
+                <Link href="/dashboard" className="text-gray-600 hover:text-purple-600" prefetch={false}>
                   Feed
                 </Link>
-                <Link href="/projects" className="text-gray-600 hover:text-purple-600">
+                <Link href="/projects" className="text-gray-600 hover:text-purple-600" prefetch={false}>
                   Projects
                 </Link>
-                <Link href="/resources" className="text-gray-600 hover:text-purple-600">
+                <Link href="/resources" className="text-gray-600 hover:text-purple-600" prefetch={false}>
                   Resources
                 </Link>
-                <Link href="/recruiters" className="text-gray-600 hover:text-purple-600">
+                <Link href="/recruiters" className="text-gray-600 hover:text-purple-600" prefetch={false}>
                   Jobs
                 </Link>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/profile">
+              <Link href="/profile" prefetch={false}>
                 <Avatar className="h-8 w-8 cursor-pointer">
                   <AvatarImage src="/placeholder.svg?height=32&width=32" />
                   <AvatarFallback>JD</AvatarFallback>
