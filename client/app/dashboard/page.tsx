@@ -98,47 +98,6 @@ export default function Dashboard() {
   if (!user) {
     return null;
   }
-  const posts = [
-    {
-      id: 1,
-      author: "Sarah Chen",
-      username: "@sarahdev",
-      avatar: "/placeholder.svg?height=40&width=40",
-      time: "2h ago",
-      content:
-        "Just shipped a new React component library! 🚀 It includes 50+ customizable components with TypeScript support. Would love to get some feedback from the community!",
-      tags: ["React", "TypeScript", "OpenSource"],
-      likes: 42,
-      comments: 8,
-      shares: 12,
-    },
-    {
-      id: 2,
-      author: "Alex Rodriguez",
-      username: "@alexcodes",
-      avatar: "/placeholder.svg?height=40&width=40",
-      time: "4h ago",
-      content:
-        "Looking for a senior full-stack developer to join our startup! We're building the next generation of developer tools. Remote-friendly, competitive salary, and equity options available.",
-      tags: ["Jobs", "FullStack", "Remote"],
-      likes: 28,
-      comments: 15,
-      shares: 6,
-    },
-    {
-      id: 3,
-      author: "Maya Patel",
-      username: "@mayacodes",
-      avatar: "/placeholder.svg?height=40&width=40",
-      time: "6h ago",
-      content:
-        "Just finished a 30-day coding challenge! Built 30 different projects using various technologies. Here's what I learned about consistency and growth mindset...",
-      tags: ["Learning", "Challenge", "Growth"],
-      likes: 156,
-      comments: 23,
-      shares: 31,
-    },
-  ]
 
   return (
     <div className="min-h-screen bg-gray-50">
