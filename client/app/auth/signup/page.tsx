@@ -188,7 +188,7 @@ export default function SignUpPage() {
           </div>
           <div className="text-center text-sm">
             Already have an account?{" "}
-            <Link href="/auth/login" className="text-purple-600 hover:underline">
+            <Link href="/auth/login" className="text-purple-600 hover:underline" prefetch={false}>
               Sign in
             </Link>
           </div>
