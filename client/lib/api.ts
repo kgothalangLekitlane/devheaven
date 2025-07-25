@@ -1,6 +1,30 @@
 // client/lib/api.ts
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://devheaven-2.onrender.com";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+// Helper function to handle fetch errors
+async function apiRequest(url: string, options: RequestInit = {}) {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new Error('Unable to connect to server. Please check if the backend is running.');
+    }
+    throw error;
+  }
+}
 
 // Auth
 export async function registerUser(data: any) {
