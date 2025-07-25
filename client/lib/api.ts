@@ -3,6 +3,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 // Demo mode - all API functions return mock data
+console.log('🚀 DevHeaven running in Demo Mode - all features available for exploration!');
 
 // Auth
 export async function registerUser(data: any) {
