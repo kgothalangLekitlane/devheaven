@@ -11,10 +11,8 @@ const nextConfig = {
   images: {
     unoptimized: true, // required for static export
   },
-  experimental: {
-    // Disable problematic features that might cause fetch issues
-    serverComponentsExternalPackages: [],
-  },
+  // Moved from experimental to top level as per Next.js 15 requirements
+  serverExternalPackages: [],
   // Disable automatic static optimization to prevent prefetch issues
   trailingSlash: false,
   // Add headers to prevent caching issues
