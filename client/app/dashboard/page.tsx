@@ -290,53 +290,68 @@ export default function Dashboard() {
 
             {/* Posts Feed */}
             <div className="space-y-6">
-              {posts.map((post) => (
-                <Card key={post.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex space-x-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={post.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>
-                          {post.author
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h4 className="font-semibold">{post.author}</h4>
-                          <span className="text-gray-500 text-sm">{post.username}</span>
-                          <span className="text-gray-400 text-sm">•</span>
-                          <span className="text-gray-500 text-sm">{post.time}</span>
-                        </div>
-                        <p className="text-gray-800 mb-3">{post.content}</p>
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {post.tags.map((tag) => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
-                              #{tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="flex items-center space-x-6 text-gray-500">
-                          <button className="flex items-center space-x-2 hover:text-red-500 transition-colors">
-                            <Heart className="h-4 w-4" />
-                            <span className="text-sm">{post.likes}</span>
-                          </button>
-                          <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors">
-                            <MessageCircle className="h-4 w-4" />
-                            <span className="text-sm">{post.comments}</span>
-                          </button>
-                          <button className="flex items-center space-x-2 hover:text-green-500 transition-colors">
-                            <Share2 className="h-4 w-4" />
-                            <span className="text-sm">{post.shares}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+              {posts.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6 text-center text-gray-500">
+                    <p>No posts yet. Be the first to share something!</p>
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                posts.map((post: any) => (
+                  <Card key={post._id}>
+                    <CardContent className="pt-6">
+                      <div className="flex space-x-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={post.author?.profileImage || "/placeholder.svg"} />
+                          <AvatarFallback>
+                            {post.author?.firstName?.[0]}{post.author?.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h4 className="font-semibold">
+                              {post.author?.firstName} {post.author?.lastName}
+                            </h4>
+                            <span className="text-gray-500 text-sm">@{post.author?.username}</span>
+                            <span className="text-gray-400 text-sm">•</span>
+                            <span className="text-gray-500 text-sm">
+                              {new Date(post.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <h3 className="font-medium mb-2">{post.title}</h3>
+                          <p className="text-gray-800 mb-3">{post.content}</p>
+                          {post.tags && post.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {post.tags.map((tag: string) => (
+                                <Badge key={tag} variant="secondary" className="text-xs">
+                                  #{tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center space-x-6 text-gray-500">
+                            <button
+                              className="flex items-center space-x-2 hover:text-red-500 transition-colors"
+                              onClick={() => handleLike(post._id)}
+                            >
+                              <Heart className="h-4 w-4" />
+                              <span className="text-sm">{post.likes?.length || 0}</span>
+                            </button>
+                            <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors">
+                              <MessageCircle className="h-4 w-4" />
+                              <span className="text-sm">{post.comments?.length || 0}</span>
+                            </button>
+                            <button className="flex items-center space-x-2 hover:text-green-500 transition-colors">
+                              <Share2 className="h-4 w-4" />
+                              <span className="text-sm">Share</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
