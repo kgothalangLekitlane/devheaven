@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { ThemeProvider } from '@/components/theme-provider'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'DevHeaven - Connect with Developers Worldwide',
+  description: 'Join the global community of developers. Share projects, find jobs, connect with peers.',
 }
 
 export default function RootLayout({
@@ -14,7 +15,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
     </html>
   )
 }
