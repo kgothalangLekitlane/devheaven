@@ -151,16 +151,16 @@ export default function Dashboard() {
                 <span className="text-2xl font-bold text-gray-900">DevHeaven</span>
               </Link>
               <div className="hidden md:flex items-center space-x-6">
-                <Link href="/dashboard" className="text-purple-600 font-medium">
+                <Link href="/dashboard" className="text-purple-600 font-medium" prefetch={false}>
                   Feed
                 </Link>
-                <Link href="/projects" className="text-gray-600 hover:text-purple-600">
+                <Link href="/projects" className="text-gray-600 hover:text-purple-600" prefetch={false}>
                   Projects
                 </Link>
-                <Link href="/resources" className="text-gray-600 hover:text-purple-600">
+                <Link href="/resources" className="text-gray-600 hover:text-purple-600" prefetch={false}>
                   Resources
                 </Link>
-                <Link href="/recruiters" className="text-gray-600 hover:text-purple-600">
+                <Link href="/recruiters" className="text-gray-600 hover:text-purple-600" prefetch={false}>
                   Jobs
                 </Link>
               </div>
