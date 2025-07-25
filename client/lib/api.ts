@@ -125,16 +125,18 @@ export async function fetchPosts() {
 }
 
 export async function createPost(data: any, token: string) {
-  const res = await fetch(`${API_URL}/api/posts`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error("Failed to create post");
-  return res.json();
+  try {
+    return await apiRequest(`${API_URL}/api/posts`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    });
+  } catch (error) {
+    console.error('Failed to create post:', error);
+    throw new Error('Unable to create post. Please check your connection and try again.');
+  }
 }
 
 // Jobs
