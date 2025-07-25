@@ -86,29 +86,83 @@ export async function addResource(data: any, token: string) {
 
 // Posts
 export async function fetchPosts() {
-  try {
-    return await apiRequest(`${API_URL}/api/posts`);
-  } catch (error) {
-    console.error('Failed to fetch posts:', error);
-    // Return mock data as fallback
-    return [
-      {
-        _id: "1",
-        title: "Welcome to DevHeaven!",
-        content: "This is a sample post. Connect to the backend to see real posts.",
-        author: {
-          _id: "1",
-          firstName: "Demo",
-          lastName: "User",
-          username: "demouser"
+  // Always return demo data in this environment
+  console.log('Using demo mode for posts');
+  return [
+    {
+      _id: "demo1",
+      title: "Welcome to DevHeaven!",
+      content: "This is a demo post showcasing our platform's capabilities. In demo mode, you can explore all features without connecting to a backend server.",
+      author: {
+        _id: "demo-user-1",
+        firstName: "Sarah",
+        lastName: "Chen",
+        username: "sarahdev"
+      },
+      tags: ["welcome", "demo", "platform"],
+      likes: ["user1", "user2", "user3"],
+      comments: [
+        {
+          user: { firstName: "John", lastName: "Doe", username: "johndoe" },
+          text: "Great post! Looking forward to using this platform.",
+          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
+        }
+      ],
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+    },
+    {
+      _id: "demo2",
+      title: "Building Amazing React Components",
+      content: "Just finished creating a new component library with TypeScript support. It includes 50+ customizable components that are production-ready!",
+      author: {
+        _id: "demo-user-2",
+        firstName: "Alex",
+        lastName: "Rodriguez",
+        username: "alexcodes"
+      },
+      tags: ["react", "typescript", "components", "opensource"],
+      likes: ["user1", "user4", "user5", "user6"],
+      comments: [
+        {
+          user: { firstName: "Emily", lastName: "Wong", username: "emilyw" },
+          text: "This looks amazing! Can you share the GitHub repo?",
+          createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString()
         },
-        tags: ["welcome", "demo"],
-        likes: [],
-        comments: [],
-        createdAt: new Date().toISOString()
-      }
-    ];
-  }
+        {
+          user: { firstName: "Mike", lastName: "Taylor", username: "miket" },
+          text: "Perfect timing! I was just looking for something like this.",
+          createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString()
+        }
+      ],
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString()
+    },
+    {
+      _id: "demo3",
+      title: "30-Day Coding Challenge Complete!",
+      content: "Just wrapped up an intensive 30-day coding challenge where I built a different project each day. Learned so much about consistency, problem-solving, and pushing through obstacles. The growth mindset is everything!",
+      author: {
+        _id: "demo-user-3",
+        firstName: "Maya",
+        lastName: "Patel",
+        username: "mayacodes"
+      },
+      tags: ["challenge", "learning", "growth", "motivation"],
+      likes: ["user1", "user2", "user3", "user4", "user5", "user6", "user7"],
+      comments: [
+        {
+          user: { firstName: "David", lastName: "Kim", username: "davidk" },
+          text: "Incredible dedication! What was your favorite project?",
+          createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+        },
+        {
+          user: { firstName: "Lisa", lastName: "Zhang", username: "lisaz" },
+          text: "You're an inspiration! Starting my own challenge tomorrow.",
+          createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString()
+        }
+      ],
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString()
+    }
+  ];
 }
 
 export async function createPost(data: any, token: string) {
