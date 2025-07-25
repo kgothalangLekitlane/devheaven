@@ -2,11 +2,7 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-// Helper function to handle fetch errors
-async function apiRequest(url: string, options: RequestInit = {}) {
-  // For this environment, always throw connection error to trigger demo mode
-  throw new Error('Unable to connect to server. Using demo mode.');
-}
+// Demo mode - all API functions return mock data
 
 // Auth
 export async function registerUser(data: any) {
