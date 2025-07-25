@@ -235,35 +235,56 @@ export default function Dashboard() {
             {/* Create Post */}
             <Card className="mb-6">
               <CardContent className="pt-6">
-                <div className="flex space-x-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <Textarea
-                      placeholder="Share your thoughts, projects, or ask questions..."
-                      className="min-h-[100px] resize-none"
-                    />
-                    <div className="flex justify-between items-center mt-4">
-                      <div className="flex space-x-2">
-                        <Badge variant="outline" className="cursor-pointer hover:bg-purple-50">
-                          <Code2 className="h-3 w-3 mr-1" />
-                          Code
-                        </Badge>
-                        <Badge variant="outline" className="cursor-pointer hover:bg-purple-50">
-                          <Briefcase className="h-3 w-3 mr-1" />
-                          Job
-                        </Badge>
-                        <Badge variant="outline" className="cursor-pointer hover:bg-purple-50">
-                          <BookOpen className="h-3 w-3 mr-1" />
-                          Resource
-                        </Badge>
+                <form onSubmit={handleCreatePost}>
+                  <div className="flex space-x-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user?.profileImage || "/placeholder.svg?height=40&width=40"} />
+                      <AvatarFallback>
+                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Post title..."
+                        value={newPost.title}
+                        onChange={(e) => setNewPost(prev => ({ ...prev, title: e.target.value }))}
+                        className="mb-3"
+                        required
+                      />
+                      <Textarea
+                        placeholder="Share your thoughts, projects, or ask questions..."
+                        className="min-h-[100px] resize-none"
+                        value={newPost.content}
+                        onChange={(e) => setNewPost(prev => ({ ...prev, content: e.target.value }))}
+                        required
+                      />
+                      <div className="flex justify-between items-center mt-4">
+                        <div className="flex space-x-2">
+                          <Badge variant="outline" className="cursor-pointer hover:bg-purple-50">
+                            <Code2 className="h-3 w-3 mr-1" />
+                            Code
+                          </Badge>
+                          <Badge variant="outline" className="cursor-pointer hover:bg-purple-50">
+                            <Briefcase className="h-3 w-3 mr-1" />
+                            Job
+                          </Badge>
+                          <Badge variant="outline" className="cursor-pointer hover:bg-purple-50">
+                            <BookOpen className="h-3 w-3 mr-1" />
+                            Resource
+                          </Badge>
+                        </div>
+                        <Button
+                          type="submit"
+                          className="bg-purple-600 hover:bg-purple-700"
+                          disabled={loading || !newPost.title || !newPost.content}
+                        >
+                          {loading ? "Posting..." : "Post"}
+                        </Button>
                       </div>
-                      <Button className="bg-purple-600 hover:bg-purple-700">Post</Button>
                     </div>
                   </div>
-                </div>
+                </form>
+                {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
               </CardContent>
             </Card>
 
