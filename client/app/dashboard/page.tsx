@@ -11,6 +11,7 @@ import { Heart, MessageCircle, Share2, Code2, Briefcase, BookOpen, Search, Plus,
 import Link from "next/link"
 import { fetchPosts, createPost, likePost } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
+import { ConnectionStatus } from "@/components/ConnectionStatus"
 
 export default function Dashboard() {
   const { user, token, isLoading } = useAuth();
