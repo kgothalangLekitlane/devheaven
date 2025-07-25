@@ -262,12 +262,12 @@ export async function fetchUserById(id: string) {
 
 // Like/unlike post
 export async function likePost(postId: string, token: string) {
-  const res = await fetch(`${API_URL}/api/posts/${postId}/like`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!res.ok) throw new Error("Failed to like post");
-  return res.json();
+  // Demo mode - simulate like action
+  console.log('Demo mode: Liking post', postId);
+  return {
+    message: "Post liked",
+    likes: Math.floor(Math.random() * 10) + 1 // Random like count for demo
+  };
 }
 
 // Add comment to post
