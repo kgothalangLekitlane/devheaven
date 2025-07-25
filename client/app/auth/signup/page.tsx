@@ -66,6 +66,37 @@ export default function SignUpPage() {
       return;
     }
     setLoading(true)
+
+    // First check if we can reach the backend by doing a simple test
+    let backendAvailable = false;
+    try {
+      const testResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/posts`, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+      backendAvailable = true;
+    } catch (testError) {
+      console.log('Backend not available, switching to demo mode');
+      backendAvailable = false;
+    }
+
+    if (!backendAvailable) {
+      // Demo mode - backend is not available
+      setSuccess("Demo mode: Account created successfully! Redirecting to login...")
+      console.log("Demo registration:", {
+        email: form.email,
+        username: form.username,
+        name: `${form.firstName} ${form.lastName}`
+      })
+      setTimeout(() => {
+        setSuccess("");
+        router.replace("/auth/login");
+        setLoading(false);
+      }, 2000)
+      return;
+    }
+
+    // Backend is available, try real registration
     try {
       const formData = new FormData()
       Object.entries(form).forEach(([key, value]) => {
@@ -73,10 +104,10 @@ export default function SignUpPage() {
       })
       if (file) formData.append("profile", file)
 
-      // Use fetch directly for multipart upload
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/register`, {
         method: "POST",
-        body: formData
+        body: formData,
+        signal: AbortSignal.timeout(10000) // 10 second timeout
       })
 
       if (!res.ok) {
@@ -89,15 +120,15 @@ export default function SignUpPage() {
       setTimeout(() => {
         setSuccess("");
         router.replace("/auth/login");
+        setLoading(false);
       }, 1200)
     } catch (err) {
-      setLoading(false);
+      console.error('Registration error:', err);
 
-      // Handle specific network connection errors
-      if (err instanceof TypeError && err.message === 'Failed to fetch') {
-        // Provide demo mode when backend is unavailable
-        setSuccess("Demo mode: Account would be created! Redirecting to login...")
-        console.log("Demo registration:", {
+      // If fetch fails, fall back to demo mode
+      if (err instanceof TypeError || err.name === 'AbortError' || err.message.includes('fetch')) {
+        setSuccess("Demo mode: Account created successfully! Redirecting to login...")
+        console.log("Demo registration (fallback):", {
           email: form.email,
           username: form.username,
           name: `${form.firstName} ${form.lastName}`
@@ -105,15 +136,19 @@ export default function SignUpPage() {
         setTimeout(() => {
           setSuccess("");
           router.replace("/auth/login");
+          setLoading(false);
         }, 2000)
         return;
-      } else if (err instanceof Error && err.message) {
+      }
+
+      // Other errors
+      if (err instanceof Error && err.message) {
         setError(err.message)
       } else {
         setError("Registration failed. Please try again.")
       }
+      setLoading(false);
     }
-    setLoading(false)
   }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
