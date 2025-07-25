@@ -11,6 +11,26 @@ const nextConfig = {
   images: {
     unoptimized: true, // required for static export
   },
+  experimental: {
+    // Disable problematic features that might cause fetch issues
+    serverComponentsExternalPackages: [],
+  },
+  // Disable automatic static optimization to prevent prefetch issues
+  trailingSlash: false,
+  // Add headers to prevent caching issues
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
 }
 
 export default nextConfig;
