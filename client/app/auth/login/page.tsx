@@ -73,7 +73,7 @@ export default function LoginPage() {
           <CardDescription>Sign in to your account to continue your developer journey</CardDescription>
           <div className="mt-2 p-2 bg-blue-50 rounded-md">
             <p className="text-xs text-blue-700">
-              Demo Mode: Use any email/password to explore the app
+              Demo Mode: Use any email and password to explore the app
             </p>
           </div>
         </CardHeader>
