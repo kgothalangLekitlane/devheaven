@@ -137,7 +137,7 @@ export default function MessagesPage() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/profile">
+              <Link href="/profile" prefetch={false}>
                 <Avatar className="h-8 w-8 cursor-pointer">
                   <AvatarImage src="/placeholder.svg?height=32&width=32" />
                   <AvatarFallback>JD</AvatarFallback>
