@@ -72,16 +72,19 @@ export default function SignUpPage() {
         formData.append(key, value as string)
       })
       if (file) formData.append("profile", file)
+
       // Use fetch directly for multipart upload
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/register`, {
         method: "POST",
         body: formData
       })
+
       if (!res.ok) {
         let data = null;
         try { data = await res.json(); } catch {}
         throw new Error(data?.message || `Registration failed. (${res.status})`)
       }
+
       setSuccess("Account created! Redirecting to login...")
       setTimeout(() => {
         setSuccess("");
@@ -89,10 +92,14 @@ export default function SignUpPage() {
       }, 1200)
     } catch (err) {
       setLoading(false);
-      if (err instanceof Error && err.message) {
+
+      // Handle specific network connection errors
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+        setError("Unable to connect to server. Please try again later or contact support.")
+      } else if (err instanceof Error && err.message) {
         setError(err.message)
       } else {
-        setError("Registration failed.")
+        setError("Registration failed. Please try again.")
       }
     }
     setLoading(false)
