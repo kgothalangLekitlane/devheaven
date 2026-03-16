@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,7 +19,28 @@ export default function Dashboard() {
   const [newPost, setNewPost] = useState({ title: "", content: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [connecting, setConnecting] = useState<string[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const router = useRouter();
+
+  const suggestedConnections = [
+    { name: "Emma Wilson", role: "Frontend Developer", mutual: 12 },
+    { name: "David Kim", role: "DevOps Engineer", mutual: 8 },
+    { name: "Lisa Zhang", role: "Product Manager", mutual: 15 },
+  ];
+
+  const visiblePosts = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return posts;
+
+    return posts.filter((post: any) => {
+      const title = post.title?.toLowerCase() || "";
+      const content = post.content?.toLowerCase() || "";
+      const author = `${post.author?.firstName || ""} ${post.author?.lastName || ""}`.toLowerCase();
+      return title.includes(term) || content.includes(term) || author.includes(term);
+    });
+  }, [posts, searchTerm]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -66,6 +87,31 @@ export default function Dashboard() {
     }
   };
 
+  const handleQuickPost = () => {
+    document.getElementById("create-post")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleComment = (postId: string) => {
+    router.push(`/messages?post=${postId}`);
+  };
+
+  const handleShare = async (postId: string) => {
+    const shareUrl = `${window.location.origin}/dashboard?post=${postId}`;
+    if (navigator?.clipboard) {
+      await navigator.clipboard.writeText(shareUrl);
+      setError("Share link copied to clipboard.");
+      return;
+    }
+
+    setError(`Copy this link: ${shareUrl}`);
+  };
+
+  const handleConnect = (name: string) => {
+    if (connecting.includes(name)) return;
+    setConnecting((prev) => [...prev, name]);
+    setError(`Connection request sent to ${name}.`);
+  };
+
   if (isLoading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div>Loading...</div>
@@ -106,13 +152,25 @@ export default function Dashboard() {
               <ConnectionStatus />
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input placeholder="Search developers, projects..." className="pl-10 w-64" />
+                <Input
+                  placeholder="Search developers, projects..."
+                  className="pl-10 w-64"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+              <Button size="sm" className="bg-purple-600 hover:bg-purple-700" onClick={handleQuickPost}>
                 <Plus className="h-4 w-4 mr-2" />
                 Post
               </Button>
-              <Bell className="h-6 w-6 text-gray-600 cursor-pointer hover:text-purple-600" />
+              <button
+                type="button"
+                aria-label="Toggle notifications"
+                onClick={() => setShowNotifications((prev) => !prev)}
+                className="text-gray-600 hover:text-purple-600"
+              >
+                <Bell className="h-6 w-6 cursor-pointer" />
+              </button>
               <Link href="/messages" prefetch={false}>
                 <MessageCircle className="h-6 w-6 text-gray-600 cursor-pointer hover:text-purple-600" />
               </Link>
@@ -131,7 +189,15 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="mb-6">
+            {showNotifications && (
+              <Card className="mb-6 border-purple-200 bg-purple-50">
+                <CardContent className="pt-6 text-sm text-purple-900">
+                  Notifications are enabled. You&apos;ll be notified when someone likes or comments on your posts.
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="mb-6" id="create-post">
               <CardHeader>
                 <div className="flex items-center space-x-3">
                   <Avatar className="h-12 w-12">
@@ -266,14 +332,14 @@ export default function Dashboard() {
 
             {/* Posts Feed */}
             <div className="space-y-6">
-              {posts.length === 0 ? (
+              {visiblePosts.length === 0 ? (
                 <Card>
                   <CardContent className="pt-6 text-center text-gray-500">
-                    <p>No posts yet. Be the first to share something!</p>
+                    <p>{searchTerm ? "No posts match your search yet." : "No posts yet. Be the first to share something!"}</p>
                   </CardContent>
                 </Card>
               ) : (
-                posts.map((post: any) => (
+                visiblePosts.map((post: any) => (
                   <Card key={post._id}>
                     <CardContent className="pt-6">
                       <div className="flex space-x-3">
@@ -313,11 +379,17 @@ export default function Dashboard() {
                               <Heart className="h-4 w-4" />
                               <span className="text-sm">{post.likes?.length || 0}</span>
                             </button>
-                            <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors">
+                            <button
+                              className="flex items-center space-x-2 hover:text-blue-500 transition-colors"
+                              onClick={() => handleComment(post._id)}
+                            >
                               <MessageCircle className="h-4 w-4" />
                               <span className="text-sm">{post.comments?.length || 0}</span>
                             </button>
-                            <button className="flex items-center space-x-2 hover:text-green-500 transition-colors">
+                            <button
+                              className="flex items-center space-x-2 hover:text-green-500 transition-colors"
+                              onClick={() => handleShare(post._id)}
+                            >
                               <Share2 className="h-4 w-4" />
                               <span className="text-sm">Share</span>
                             </button>
@@ -339,11 +411,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[
-                    { name: "Emma Wilson", role: "Frontend Developer", mutual: 12 },
-                    { name: "David Kim", role: "DevOps Engineer", mutual: 8 },
-                    { name: "Lisa Zhang", role: "Product Manager", mutual: 15 },
-                  ].map((person, index) => (
+                  {suggestedConnections.map((person, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
@@ -361,8 +429,13 @@ export default function Dashboard() {
                           <p className="text-xs text-gray-400">{person.mutual} mutual connections</p>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline">
-                        Connect
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleConnect(person.name)}
+                        disabled={connecting.includes(person.name)}
+                      >
+                        {connecting.includes(person.name) ? "Requested" : "Connect"}
                       </Button>
                     </div>
                   ))}
@@ -388,7 +461,7 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-                <Button variant="outline" className="w-full mt-4 bg-transparent">
+                <Button variant="outline" className="w-full mt-4 bg-transparent" onClick={() => router.push("/recruiters")}>
                   View All Jobs
                 </Button>
               </CardContent>
