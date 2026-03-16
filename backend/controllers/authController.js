@@ -2,6 +2,13 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+  return process.env.JWT_SECRET;
+};
+
 const registerUser = (req, res) => {
     (async () => {
       const { firstName, lastName, email, username, password } = req.body;
@@ -53,11 +60,7 @@ const loginUser = async (req, res) => {
     }
 
     // Generate JWT token
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET || "fallback_secret",
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user._id }, getJwtSecret(), { expiresIn: "7d" });
 
     // Return user data (without password) and token
     const userData = {
