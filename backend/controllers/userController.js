@@ -1,12 +1,15 @@
 const User = require("../models/User")
+const mongoose = require("mongoose")
+
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 // Search candidates by skill, location, or experience
 const searchCandidates = async (req, res) => {
   try {
     const { skill, location, experience } = req.query
     let query = {}
-    if (skill) query.skills = { $regex: skill, $options: "i" }
-    if (location) query.location = { $regex: location, $options: "i" }
+    if (skill) query.skills = { $regex: escapeRegex(skill), $options: "i" }
+    if (location) query.location = { $regex: escapeRegex(location), $options: "i" }
     if (experience) query.experience = { $gte: Number(experience) }
     const candidates = await User.find(query)
     res.json({ candidates })
@@ -27,6 +30,10 @@ const getUsers = async (req, res) => {
 
 const getUserById = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid user ID" })
+    }
+
     const user = await User.findById(req.params.id, "-password")
     if (!user) {
       return res.status(404).json({ error: "User not found" })

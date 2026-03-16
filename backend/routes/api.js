@@ -8,9 +8,17 @@ const { getResources, addResource } = require('../controllers/resourceController
 const { getPosts, createPost } = require('../controllers/postController');
 const { registerUser, loginUser } = require('../controllers/authController');
 const authenticate = require('../middleware/authMiddleware');
+const upload = require('../middleware/upload');
 
 // Auth routes
-router.post('/auth/register', registerUser);
+router.post('/auth/register', (req, res, next) => {
+  upload.single('profile')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message || 'Invalid file upload' });
+    }
+    next();
+  });
+}, registerUser);
 router.post('/auth/login', loginUser);
 
 // Users

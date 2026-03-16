@@ -1,5 +1,5 @@
 const Post = require("../models/Post")
-const User = require("../models/User")
+const mongoose = require("mongoose")
 
 const getPosts = async (req, res) => {
   try {
@@ -43,6 +43,10 @@ const createPost = async (req, res) => {
 
 const getPost = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid post ID" })
+    }
+
     const post = await Post.findById(req.params.id)
       .populate("author", "firstName lastName username")
       .populate("comments.user", "firstName lastName username")
@@ -61,6 +65,10 @@ const likePost = async (req, res) => {
   try {
     const postId = req.params.id
     const userId = req.user.id
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ error: "Invalid post ID" })
+    }
 
     const post = await Post.findById(postId)
     if (!post) {
@@ -87,6 +95,10 @@ const addComment = async (req, res) => {
     const postId = req.params.id
     const userId = req.user.id
     const { text } = req.body
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ error: "Invalid post ID" })
+    }
 
     if (!text) {
       return res.status(400).json({ error: "Comment text is required" })

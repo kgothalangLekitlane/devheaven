@@ -1,16 +1,16 @@
+const mongoose = require("mongoose")
 const Message = require("../models/Message")
 const User = require("../models/User")
 
 const getMessages = async (req, res) => {
   try {
-    // Get all conversations for the current user
     const userId = req.user.id
     const messages = await Message.find({
       $or: [{ senderId: userId }, { receiverId: userId }]
     })
-    .populate("senderId", "firstName lastName username")
-    .populate("receiverId", "firstName lastName username")
-    .sort({ createdAt: -1 })
+      .populate("senderId", "firstName lastName username")
+      .populate("receiverId", "firstName lastName username")
+      .sort({ createdAt: -1 })
 
     res.json(messages)
   } catch (error) {
@@ -24,15 +24,19 @@ const getMessagesWithUser = async (req, res) => {
     const userId = req.user.id
     const otherUserId = req.params.userId
 
+    if (!mongoose.Types.ObjectId.isValid(otherUserId)) {
+      return res.status(400).json({ error: "Invalid user ID" })
+    }
+
     const messages = await Message.find({
       $or: [
         { senderId: userId, receiverId: otherUserId },
         { senderId: otherUserId, receiverId: userId }
       ]
     })
-    .populate("senderId", "firstName lastName username")
-    .populate("receiverId", "firstName lastName username")
-    .sort({ createdAt: 1 })
+      .populate("senderId", "firstName lastName username")
+      .populate("receiverId", "firstName lastName username")
+      .sort({ createdAt: 1 })
 
     res.json(messages)
   } catch (error) {
@@ -50,7 +54,15 @@ const postMessage = async (req, res) => {
       return res.status(400).json({ error: "Receiver ID and text are required" })
     }
 
-    // Check if receiver exists
+    if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+      return res.status(400).json({ error: "Invalid receiver ID" })
+    }
+
+    const trimmedText = String(text).trim()
+    if (!trimmedText) {
+      return res.status(400).json({ error: "Message text cannot be empty" })
+    }
+
     const receiver = await User.findById(receiverId)
     if (!receiver) {
       return res.status(404).json({ error: "Receiver not found" })
@@ -59,7 +71,7 @@ const postMessage = async (req, res) => {
     const message = new Message({
       senderId,
       receiverId,
-      text
+      text: trimmedText
     })
 
     await message.save()
