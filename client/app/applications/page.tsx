@@ -10,7 +10,7 @@ const labels: Record<string, string> = { submitted: "Submitted", reviewing: "Rev
 const tone: Record<string, string> = { submitted: "bg-slate-100 text-slate-700", reviewing: "bg-blue-100 text-blue-700", shortlisted: "bg-violet-100 text-violet-700", accepted: "bg-emerald-100 text-emerald-700", rejected: "bg-red-100 text-red-700", withdrawn: "bg-amber-100 text-amber-700" }
 
 export default function ApplicationsPage() {
-  const { token, loading: authLoading } = useAuth()
+  const { token, isLoading: authLoading } = useAuth()
   const [data, setData] = useState<any>({ applications: [], stats: {} })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
