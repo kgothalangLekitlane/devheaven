@@ -1,0 +1,117 @@
+"use client"
+
+import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
+import { BriefcaseBusiness, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { createJob, deleteJob, fetchRecruiterDashboard, updateJob, updateJobStatus } from "@/lib/api"
+
+type Job = {
+  _id: string
+  title: string
+  description?: string
+  location?: string
+  type?: string
+  remote?: boolean
+  skills?: string[]
+  salaryMin?: number
+  salaryMax?: number
+  status?: "open" | "closed"
+  applicants?: string[]
+  createdAt?: string
+}
+
+const emptyForm = { title: "", description: "", location: "", type: "full-time", remote: false, skills: "", salaryMin: "", salaryMax: "" }
+
+export default function RecruiterJobsPage() {
+  const [token] = useState(() => typeof window !== "undefined" ? localStorage.getItem("token") || localStorage.getItem("authToken") || "" : "")
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState("")
+  const [error, setError] = useState("")
+  const [query, setQuery] = useState("")
+  const [status, setStatus] = useState("all")
+  const [editing, setEditing] = useState<Job | null>(null)
+  const [form, setForm] = useState(emptyForm)
+  const [creating, setCreating] = useState(false)
+
+  async function load() {
+    if (!token) { setError("Sign in to access recruiter job management."); setLoading(false); return }
+    setLoading(true); setError("")
+    try {
+      const data = await fetchRecruiterDashboard(token)
+      setJobs(data.jobs || [])
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not load jobs") }
+    finally { setLoading(false) }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  const filtered = useMemo(() => jobs.filter(job => {
+    const haystack = `${job.title} ${job.location || ""} ${(job.skills || []).join(" ")}`.toLowerCase()
+    return (!query || haystack.includes(query.toLowerCase())) && (status === "all" || (job.status || "open") === status)
+  }), [jobs, query, status])
+
+  function startEdit(job: Job) {
+    setEditing(job)
+    setForm({ title: job.title || "", description: job.description || "", location: job.location || "", type: job.type || "full-time", remote: !!job.remote, skills: (job.skills || []).join(", "), salaryMin: job.salaryMin == null ? "" : String(job.salaryMin), salaryMax: job.salaryMax == null ? "" : String(job.salaryMax) })
+  }
+
+  async function saveEdit() {
+    if (!editing || !token || !form.title.trim() || !form.description.trim()) return
+    setBusy(editing._id); setError("")
+    try {
+      await updateJob(editing._id, { title: form.title.trim(), description: form.description.trim(), location: form.location.trim(), type: form.type, remote: form.remote, skills: form.skills.split(",").map(s => s.trim()).filter(Boolean), salaryMin: form.salaryMin ? Number(form.salaryMin) : undefined, salaryMax: form.salaryMax ? Number(form.salaryMax) : undefined }, token)
+      setEditing(null); await load()
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not update job") }
+    finally { setBusy("") }
+  }
+
+  async function toggleStatus(job: Job) {
+    if (!token) return
+    const next = job.status === "closed" ? "open" : "closed"
+    setBusy(job._id); setError("")
+    try { await updateJobStatus(job._id, next, token); setJobs(prev => prev.map(item => item._id === job._id ? { ...item, status: next } : item)) }
+    catch (e) { setError(e instanceof Error ? e.message : "Could not change job status") }
+    finally { setBusy("") }
+  }
+
+  async function remove(job: Job) {
+    if (!token || !confirm(`Delete “${job.title}”? This cannot be undone.`)) return
+    setBusy(job._id); setError("")
+    try { await deleteJob(job._id, token); setJobs(prev => prev.filter(item => item._id !== job._id)) }
+    catch (e) { setError(e instanceof Error ? e.message : "Could not delete job") }
+    finally { setBusy("") }
+  }
+
+  async function create() {
+    if (!token || !form.title.trim() || !form.description.trim()) return
+    setCreating(true); setError("")
+    try {
+      await createJob({ title: form.title.trim(), description: form.description.trim(), location: form.location.trim(), type: form.type, remote: form.remote, skills: form.skills.split(",").map(s => s.trim()).filter(Boolean), salaryMin: form.salaryMin ? Number(form.salaryMin) : undefined, salaryMax: form.salaryMax ? Number(form.salaryMax) : undefined }, token)
+      setForm(emptyForm); await load()
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not create job") }
+    finally { setCreating(false) }
+  }
+
+  if (loading) return <main className="min-h-screen flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin" /></main>
+
+  return <main className="min-h-screen bg-muted/30 px-4 py-8 md:px-8">
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div><p className="text-sm font-medium text-primary">Recruiter workspace</p><h1 className="text-3xl font-bold tracking-tight">Job management</h1><p className="mt-1 text-muted-foreground">Create, edit, pause and remove your developer openings.</p></div>
+        <div className="flex gap-2"><Link href="/recruiter-dashboard"><Button variant="outline">Dashboard</Button></Link><Button onClick={() => { setEditing(null); setForm(emptyForm) }}><Plus className="mr-2 h-4 w-4"/>New job</Button></div>
+      </div>
+      {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      <Card><CardContent className="grid gap-3 p-4 md:grid-cols-[1fr_180px_auto]"><Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search title, location or skills"/><Select value={status} onValueChange={setStatus}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">All jobs</SelectItem><SelectItem value="open">Open</SelectItem><SelectItem value="closed">Closed</SelectItem></SelectContent></Select><Button variant="outline" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4"/>Refresh</Button></CardContent></Card>
+      {filtered.length === 0 ? <Card><CardContent className="py-16 text-center"><BriefcaseBusiness className="mx-auto mb-3 h-10 w-10 text-muted-foreground"/><h2 className="font-semibold">No jobs found</h2><p className="mt-1 text-sm text-muted-foreground">Create your first opening or adjust the filters.</p></CardContent></Card> : <div className="grid gap-4 md:grid-cols-2">{filtered.map(job => <Card key={job._id}><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle>{job.title}</CardTitle><p className="mt-1 text-sm text-muted-foreground">{job.location || "Remote"} · {job.type || "full-time"}{job.remote ? " · Remote" : ""}</p></div><Badge variant={job.status === "closed" ? "secondary" : "default"}>{job.status || "open"}</Badge></div></CardHeader><CardContent><div className="flex flex-wrap gap-1">{(job.skills || []).slice(0, 8).map(skill => <Badge key={skill} variant="outline">{skill}</Badge>)}</div><p className="mt-4 text-sm text-muted-foreground">{job.applicants?.length || 0} applicant(s)</p><div className="mt-4 flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => startEdit(job)}><Pencil className="mr-2 h-4 w-4"/>Edit</Button><Button size="sm" variant="outline" disabled={busy === job._id} onClick={() => void toggleStatus(job)}>{job.status === "closed" ? "Reopen" : "Close"}</Button><Button size="sm" variant="destructive" disabled={busy === job._id} onClick={() => void remove(job)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button><Link href={`/recruiter-dashboard?job=${job._id}`}><Button size="sm" variant="ghost">Applicants</Button></Link></div></CardContent></Card>)}</div>}
+
+      {(editing || (!editing && form.title)) && <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4"><Card className="max-h-[92vh] w-full max-w-2xl overflow-auto"><CardHeader><CardTitle>{editing ? "Edit job" : "New job"}</CardTitle></CardHeader><CardContent className="space-y-4"><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="Job title"/><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Job description" rows={7}/><div className="grid gap-3 md:grid-cols-2"><Input value={form.location} onChange={e => setForm({...form, location: e.target.value})} placeholder="Location"/><Select value={form.type} onValueChange={value => setForm({...form, type: value})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="full-time">Full-time</SelectItem><SelectItem value="part-time">Part-time</SelectItem><SelectItem value="contract">Contract</SelectItem><SelectItem value="internship">Internship</SelectItem></SelectContent></Select></div><Input value={form.skills} onChange={e => setForm({...form, skills: e.target.value})} placeholder="Skills, separated by commas"/><div className="grid gap-3 md:grid-cols-2"><Input type="number" value={form.salaryMin} onChange={e => setForm({...form, salaryMin: e.target.value})} placeholder="Minimum salary"/><Input type="number" value={form.salaryMax} onChange={e => setForm({...form, salaryMax: e.target.value})} placeholder="Maximum salary"/></div><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.remote} onChange={e => setForm({...form, remote: e.target.checked})}/> Remote-friendly</label><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => { setEditing(null); setForm(emptyForm) }}>Cancel</Button><Button disabled={!!busy || creating || !form.title.trim() || !form.description.trim()} onClick={() => editing ? void saveEdit() : void create()}>{editing ? (busy ? "Saving..." : "Save changes") : (creating ? "Creating..." : "Create job")}</Button></div></CardContent></Card></div>}
+    </div>
+  </main>
+}
