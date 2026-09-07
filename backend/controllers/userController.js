@@ -3,13 +3,26 @@ const mongoose = require("mongoose")
 const { GridFSBucket, ObjectId } = require("mongodb")
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-const publicProjection = "-password"
+const publicProjection = "-password -email"
+
+const normalizeUrl = (value) => {
+  const input = String(value ?? "").trim()
+  if (!input) return ""
+  try {
+    const url = new URL(input)
+    if (!["http:", "https:"].includes(url.protocol)) return ""
+    return url.toString()
+  } catch {
+    return ""
+  }
+}
 
 const toPublicUser = (user) => {
   const value = user?.toObject ? user.toObject() : { ...user }
   if (value.profileImage?.startsWith("gridfs:")) value.profileImage = `/api/users/${value._id}/avatar`
   value.profileViewCount = Array.isArray(value.profileViews) ? value.profileViews.length : 0
   delete value.profileViews
+  delete value.email
   return value
 }
 
@@ -20,16 +33,22 @@ const searchCandidates = async (req, res) => {
     const text = String(q || "").trim()
     if (text) {
       const pattern = { $regex: escapeRegex(text), $options: "i" }
-      query.$or = [{ firstName: pattern }, { lastName: pattern }, { username: pattern }, { email: pattern }, { skills: pattern }]
+      query.$or = [{ firstName: pattern }, { lastName: pattern }, { username: pattern }, { skills: pattern }]
     }
     if (skill) query.skills = { $regex: escapeRegex(String(skill)), $options: "i" }
     if (location) query.location = { $regex: escapeRegex(String(location)), $options: "i" }
-    if (experience) query.experience = { $gte: Number(experience) }
+    if (experience !== undefined && experience !== "") {
+      const minimumExperience = Number(experience)
+      if (!Number.isFinite(minimumExperience) || minimumExperience < 0) {
+        return res.status(400).json({ error: "Experience must be a non-negative number" })
+      }
+      query.experience = { $gte: minimumExperience }
+    }
     const candidates = await User.find(query, publicProjection).sort({ createdAt: -1 }).limit(50)
     res.json({ candidates: candidates.map(toPublicUser) })
   } catch (err) {
     console.error("Search users error:", err)
-    res.status(400).json({ message: err.message })
+    res.status(500).json({ error: "Failed to search users" })
   }
 }
 
@@ -95,14 +114,18 @@ const updateMyProfile = async (req, res) => {
     const updates = {}
     for (const key of allowed) if (req.body[key] !== undefined) updates[key] = req.body[key]
     if (updates.skills && !Array.isArray(updates.skills)) updates.skills = String(updates.skills).split(",").map(v => v.trim()).filter(Boolean).slice(0, 30)
-    if (updates.experience !== undefined) updates.experience = Number(updates.experience)
+    if (updates.experience !== undefined) {
+      const experience = Number(updates.experience)
+      if (!Number.isFinite(experience) || experience < 0 || experience > 80) return res.status(400).json({ error: "Experience must be between 0 and 80" })
+      updates.experience = experience
+    }
     if (["github", "linkedin", "twitter", "website"].some(key => req.body[key] !== undefined)) {
       const current = await User.findById(req.user.id, "socialLinks")
       updates.socialLinks = {
-        github: String(req.body.github ?? current?.socialLinks?.github ?? "").trim(),
-        linkedin: String(req.body.linkedin ?? current?.socialLinks?.linkedin ?? "").trim(),
-        twitter: String(req.body.twitter ?? current?.socialLinks?.twitter ?? "").trim(),
-        website: String(req.body.website ?? current?.socialLinks?.website ?? "").trim(),
+        github: req.body.github !== undefined ? normalizeUrl(req.body.github) : String(current?.socialLinks?.github || ""),
+        linkedin: req.body.linkedin !== undefined ? normalizeUrl(req.body.linkedin) : String(current?.socialLinks?.linkedin || ""),
+        twitter: req.body.twitter !== undefined ? normalizeUrl(req.body.twitter) : String(current?.socialLinks?.twitter || ""),
+        website: req.body.website !== undefined ? normalizeUrl(req.body.website) : String(current?.socialLinks?.website || ""),
       }
     }
     if (req.file?.buffer) {
@@ -112,7 +135,7 @@ const updateMyProfile = async (req, res) => {
       await new Promise((resolve, reject) => { uploadStream.on("finish", resolve).on("error", reject); uploadStream.end(req.file.buffer) })
       updates.profileImage = `gridfs:${uploadStream.id.toString()}`
     }
-    const user = await User.findByIdAndUpdate(req.user.id, { $set: updates }, { new: true, runValidators: true }).select(publicProjection)
+    const user = await User.findByIdAndUpdate(req.user.id, { $set: updates }, { new: true, runValidators: true }).select("-password")
     if (!user) return res.status(404).json({ error: "User not found" })
     res.json({ user: toPublicUser(user) })
   } catch (error) {
