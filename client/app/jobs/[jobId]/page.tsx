@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, BriefcaseBusiness, ExternalLink, MapPin, Wifi, Loader2 } from "lucide-react"
+import { ArrowLeft, BriefcaseBusiness, MapPin, Wifi, Loader2 } from "lucide-react"
 import { applyToJob, fetchJob } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 
-export default function JobDetailPage({ params }: { params: { jobId: string } }) {
+export default function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { token } = useAuth()
   const [job, setJob] = useState<any>(null)
+  const [jobId, setJobId] = useState("")
   const [coverLetter, setCoverLetter] = useState("")
   const [resumeUrl, setResumeUrl] = useState("")
   const [loading, setLoading] = useState(true)
@@ -16,14 +17,17 @@ export default function JobDetailPage({ params }: { params: { jobId: string } })
   const [message, setMessage] = useState("")
 
   useEffect(() => {
-    fetchJob(params.jobId).then((data) => setJob(data.job)).catch((e) => setMessage(e.message)).finally(() => setLoading(false))
-  }, [params.jobId])
+    params.then(({ jobId: id }) => {
+      setJobId(id)
+      fetchJob(id).then((data) => setJob(data.job)).catch((e) => setMessage(e.message)).finally(() => setLoading(false))
+    })
+  }, [params])
 
   async function apply() {
     if (!token) { setMessage("Please sign in to apply for this job."); return }
     setApplying(true); setMessage("")
     try {
-      await applyToJob(params.jobId, { coverLetter, resumeUrl }, token)
+      await applyToJob(jobId, { coverLetter, resumeUrl }, token)
       setMessage("Application submitted successfully. You can track it from My applications.")
     } catch (e: any) { setMessage(e.message) } finally { setApplying(false) }
   }
