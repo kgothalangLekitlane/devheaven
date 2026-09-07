@@ -27,18 +27,10 @@ router.get("/dashboard", authenticate, async (req, res) => {
     const applications = await Application.find({ job: { $in: jobIds } })
       .populate("applicant", "firstName lastName username profileImage skills location experience bio")
       .populate("job", "title company location type remote status")
-      .sort({ updatedAt: -1 })
-      .limit(500)
-      .lean()
-    const stats = applications.reduce((acc, item) => {
-      acc.total += 1
-      acc[item.status] = (acc[item.status] || 0) + 1
-      return acc
-    }, { total: 0, submitted: 0, reviewing: 0, shortlisted: 0, rejected: 0, accepted: 0, withdrawn: 0 })
+      .sort({ updatedAt: -1 }).limit(500).lean()
+    const stats = applications.reduce((acc, item) => { acc.total += 1; acc[item.status] = (acc[item.status] || 0) + 1; return acc }, { total: 0, submitted: 0, reviewing: 0, shortlisted: 0, rejected: 0, accepted: 0, withdrawn: 0 })
     res.json({ recruiters, jobs, applications, stats })
-  } catch (err) {
-    res.status(500).json({ message: "Failed to load recruiter dashboard" })
-  }
+  } catch (err) { res.status(500).json({ message: "Failed to load recruiter dashboard" }) }
 })
 
 router.get("/jobs/:jobId/applications", authenticate, async (req, res) => {
@@ -47,9 +39,7 @@ router.get("/jobs/:jobId/applications", authenticate, async (req, res) => {
     const job = await ownedJob(req.user.id, req.params.jobId)
     if (!job) return res.status(404).json({ message: "Job not found" })
     if (!job.recruiter || String(job.recruiter.owner) !== String(req.user.id)) return res.status(403).json({ message: "You do not own this job" })
-    const applications = await Application.find({ job: job._id })
-      .populate("applicant", "firstName lastName username profileImage skills location experience bio socialLinks")
-      .sort({ updatedAt: -1 }).lean()
+    const applications = await Application.find({ job: job._id }).populate("applicant", "firstName lastName username profileImage skills location experience bio socialLinks").sort({ updatedAt: -1 }).lean()
     res.json({ job, applications })
   } catch (err) { res.status(500).json({ message: "Failed to fetch applicants" }) }
 })
@@ -100,12 +90,11 @@ router.delete("/jobs/:jobId", authenticate, async (req, res) => {
     if (!job) return res.status(404).json({ message: "Job not found" })
     if (!job.recruiter || String(job.recruiter.owner) !== String(req.user.id)) return res.status(403).json({ message: "You do not own this job" })
     const recruiterId = job.recruiter._id
-    await Promise.all([
-      Application.deleteMany({ job: job._id }),
-      ApplicationEvent.deleteMany({ application: { $in: await Application.find({ job: job._id }).distinct("_id") } }),
-      job.deleteOne(),
-      Recruiter.updateOne({ _id: recruiterId }, { $pull: { jobs: job._id } }),
-    ])
+    const applicationIds = await Application.find({ job: job._id }).distinct("_id")
+    await ApplicationEvent.deleteMany({ application: { $in: applicationIds } })
+    await Application.deleteMany({ job: job._id })
+    await job.deleteOne()
+    await Recruiter.updateOne({ _id: recruiterId }, { $pull: { jobs: job._id } })
     res.json({ message: "Job deleted" })
   } catch (err) { res.status(500).json({ message: "Failed to delete job" }) }
 })
