@@ -40,7 +40,16 @@ router.get("/jobs/:jobId/applications", authenticate, async (req, res) => {
     if (!job) return res.status(404).json({ message: "Job not found" })
     if (!job.recruiter || String(job.recruiter.owner) !== String(req.user.id)) return res.status(403).json({ message: "You do not own this job" })
     const applications = await Application.find({ job: job._id }).populate("applicant", "firstName lastName username profileImage skills location experience bio socialLinks").sort({ updatedAt: -1 }).lean()
-    res.json({ job, applications })
+    const applicationIds = applications.map((application) => application._id)
+    const events = applicationIds.length ? await ApplicationEvent.find({ application: { $in: applicationIds } }).sort({ createdAt: 1 }).lean() : []
+    const eventsByApplication = events.reduce((acc, event) => {
+      const key = String(event.application)
+      if (!acc[key]) acc[key] = []
+      acc[key].push(event)
+      return acc
+    }, {})
+    const enrichedApplications = applications.map((application) => ({ ...application, events: eventsByApplication[String(application._id)] || [] }))
+    res.json({ job, applications: enrichedApplications })
   } catch (err) { res.status(500).json({ message: "Failed to fetch applicants" }) }
 })
 
