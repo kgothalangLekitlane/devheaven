@@ -5,7 +5,6 @@ const Application = require("../models/Application")
 const ApplicationEvent = require("../models/ApplicationEvent")
 const SavedJob = require("../models/SavedJob")
 const Notification = require("../models/Notification")
-const Recruiter = require("../models/Recruiter")
 const authenticate = require("../middleware/authMiddleware")
 
 const router = express.Router()
@@ -25,6 +24,7 @@ router.get("/", async (req, res) => {
     if (type) filter.type = String(type)
     if (remote === "true") filter.remote = true
     if (skill) filter.skills = { $regex: escapeRegex(String(skill).trim()), $options: "i" }
+    if (!["open", "closed", "all"].includes(String(status))) return res.status(400).json({ message: "Invalid job status filter" })
     if (status !== "all") filter.status = String(status)
     const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), 50)
     const safePage = Math.max(Number.parseInt(page, 10) || 1, 1)
@@ -46,7 +46,7 @@ router.get("/saved", authenticate, async (req, res) => {
 router.get("/recommended", authenticate, async (req, res) => {
   try {
     const User = require("../models/User")
-    const user = await User.findById(req.user.id).select("skills location experience").lean()
+    const user = await User.findById(req.user.id).select("skills location").lean()
     const skills = Array.isArray(user?.skills) ? user.skills.filter(Boolean).slice(0, 20) : []
     const clauses = []
     if (skills.length) clauses.push({ skills: { $in: skills.map((s) => new RegExp(`^${escapeRegex(s)}$`, "i")) } })
@@ -78,12 +78,19 @@ router.get("/applications/:id", authenticate, async (req, res) => {
 router.post("/applications/:id/withdraw", authenticate, async (req, res) => {
   try {
     if (!validId(req.params.id)) return res.status(400).json({ message: "Invalid application id" })
-    const application = await Application.findOne({ _id: req.params.id, applicant: req.user.id })
+    const application = await Application.findOne({ _id: req.params.id, applicant: req.user.id }).populate("job", "title recruiter")
     if (!application) return res.status(404).json({ message: "Application not found" })
     if (["rejected", "accepted", "withdrawn"].includes(application.status)) return res.status(409).json({ message: "This application can no longer be withdrawn" })
     application.status = "withdrawn"
     await application.save()
     await ApplicationEvent.create({ application: application._id, status: "withdrawn", note: "Application withdrawn by candidate" })
+    if (application.job?.recruiter) {
+      const Recruiter = require("../models/Recruiter")
+      const recruiter = await Recruiter.findById(application.job.recruiter).select("owner").lean()
+      if (recruiter?.owner && String(recruiter.owner) !== String(req.user.id)) {
+        await Notification.create({ recipient: recruiter.owner, sender: req.user.id, type: "application_status", text: `An application for ${application.job.title} was withdrawn.`, link: `/recruiter-dashboard?job=${application.job._id}` })
+      }
+    }
     res.json({ application })
   } catch (err) { res.status(400).json({ message: err.message }) }
 })
@@ -91,7 +98,7 @@ router.post("/applications/:id/withdraw", authenticate, async (req, res) => {
 router.get("/:jobId", async (req, res) => {
   try {
     if (!validId(req.params.jobId)) return res.status(400).json({ message: "Invalid job id" })
-    const job = await Job.findById(req.params.jobId).populate("recruiter", "name company email").lean()
+    const job = await Job.findById(req.params.jobId).populate("recruiter", "name company").lean()
     if (!job) return res.status(404).json({ message: "Job not found" })
     res.json({ job })
   } catch (err) { res.status(500).json({ message: "Failed to fetch job" }) }
