@@ -8,10 +8,25 @@ const publicProjection = "-password -email"
 const normalizeUrl = (value) => {
   const input = String(value ?? "").trim()
   if (!input) return ""
+  const withProtocol = /^https?:\/\//i.test(input) ? input : `https://${input}`
   try {
-    const url = new URL(input)
+    const url = new URL(withProtocol)
     if (!["http:", "https:"].includes(url.protocol)) return ""
     return url.toString()
+  } catch {
+    return ""
+  }
+}
+
+const normalizeGithubUrl = (value) => {
+  const normalized = normalizeUrl(value)
+  if (!normalized) return ""
+  try {
+    const url = new URL(normalized)
+    if (url.hostname.toLowerCase() !== "github.com") return ""
+    const parts = url.pathname.split("/").filter(Boolean)
+    if (parts.length !== 1 || !/^[A-Za-z0-9-]{1,39}$/.test(parts[0])) return ""
+    return `https://github.com/${parts[0]}`
   } catch {
     return ""
   }
@@ -39,9 +54,7 @@ const searchCandidates = async (req, res) => {
     if (location) query.location = { $regex: escapeRegex(String(location)), $options: "i" }
     if (experience !== undefined && experience !== "") {
       const minimumExperience = Number(experience)
-      if (!Number.isFinite(minimumExperience) || minimumExperience < 0) {
-        return res.status(400).json({ error: "Experience must be a non-negative number" })
-      }
+      if (!Number.isFinite(minimumExperience) || minimumExperience < 0) return res.status(400).json({ error: "Experience must be a non-negative number" })
       query.experience = { $gte: minimumExperience }
     }
     const candidates = await User.find(query, publicProjection).sort({ createdAt: -1 }).limit(50)
@@ -122,7 +135,7 @@ const updateMyProfile = async (req, res) => {
     if (["github", "linkedin", "twitter", "website"].some(key => req.body[key] !== undefined)) {
       const current = await User.findById(req.user.id, "socialLinks")
       updates.socialLinks = {
-        github: req.body.github !== undefined ? normalizeUrl(req.body.github) : String(current?.socialLinks?.github || ""),
+        github: req.body.github !== undefined ? normalizeGithubUrl(req.body.github) : String(current?.socialLinks?.github || ""),
         linkedin: req.body.linkedin !== undefined ? normalizeUrl(req.body.linkedin) : String(current?.socialLinks?.linkedin || ""),
         twitter: req.body.twitter !== undefined ? normalizeUrl(req.body.twitter) : String(current?.socialLinks?.twitter || ""),
         website: req.body.website !== undefined ? normalizeUrl(req.body.website) : String(current?.socialLinks?.website || ""),
