@@ -1,37 +1,32 @@
-.dark main.min-h-screen.bg-gray-50 {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
+/* Compatibility layer for legacy light-only screens while the app is migrated to semantic theme tokens. */
+.dark .bg-white { background-color: hsl(var(--card)); }
+.dark .bg-gray-50 { background-color: hsl(var(--background)); }
+.dark .bg-gray-100 { background-color: hsl(var(--muted)); }
 
-.dark main.min-h-screen.bg-gray-50 nav.bg-white {
+.dark .text-gray-900 { color: hsl(var(--foreground)); }
+.dark .text-gray-800,
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500 { color: hsl(var(--muted-foreground)); }
+.dark .text-gray-400 { color: hsl(215 20% 60%); }
+
+.dark .border-gray-200,
+.dark .border-gray-300 { border-color: hsl(var(--border)); }
+
+.dark .border-red-200 { border-color: rgb(127 29 29 / 0.5); }
+.dark .bg-red-50 { background-color: rgb(127 29 29 / 0.2); }
+.dark .text-red-700 { color: rgb(252 165 165); }
+
+.dark input::placeholder,
+.dark textarea::placeholder { color: hsl(var(--muted-foreground)); }
+
+.dark .text-purple-600 { color: hsl(187 92% 60%); }
+.dark .hover\:text-purple-600:hover { color: hsl(187 92% 60%); }
+
+.dark nav.bg-white,
+.dark nav.bg-white.border-b,
+.dark nav.bg-white.border-gray-200 {
   background-color: hsl(var(--card));
   color: hsl(var(--foreground));
   border-color: hsl(var(--border));
-}
-
-.dark main.min-h-screen.bg-gray-50 .text-gray-500,
-.dark main.min-h-screen.bg-gray-50 .text-gray-600,
-.dark main.min-h-screen.bg-gray-50 .text-gray-700 {
-  color: hsl(var(--muted-foreground));
-}
-
-.dark main.min-h-screen.bg-gray-50 .text-gray-900 {
-  color: hsl(var(--foreground));
-}
-
-.dark main.min-h-screen.bg-gray-50 .border-red-200 {
-  border-color: rgb(127 29 29 / 0.5);
-}
-
-.dark main.min-h-screen.bg-gray-50 .bg-red-50 {
-  background-color: rgb(127 29 29 / 0.2);
-}
-
-.dark main.min-h-screen.bg-gray-50 .text-red-700 {
-  color: rgb(252 165 165);
-}
-
-.dark main.min-h-screen.bg-gray-50 input::placeholder,
-.dark main.min-h-screen.bg-gray-50 textarea::placeholder {
-  color: hsl(var(--muted-foreground));
 }
