@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import './jobs/jobs-dark-mode.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
