@@ -1,0 +1,37 @@
+.dark main.min-h-screen.bg-gray-50 {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.dark main.min-h-screen.bg-gray-50 nav.bg-white {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+.dark main.min-h-screen.bg-gray-50 .text-gray-500,
+.dark main.min-h-screen.bg-gray-50 .text-gray-600,
+.dark main.min-h-screen.bg-gray-50 .text-gray-700 {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark main.min-h-screen.bg-gray-50 .text-gray-900 {
+  color: hsl(var(--foreground));
+}
+
+.dark main.min-h-screen.bg-gray-50 .border-red-200 {
+  border-color: rgb(127 29 29 / 0.5);
+}
+
+.dark main.min-h-screen.bg-gray-50 .bg-red-50 {
+  background-color: rgb(127 29 29 / 0.2);
+}
+
+.dark main.min-h-screen.bg-gray-50 .text-red-700 {
+  color: rgb(252 165 165);
+}
+
+.dark main.min-h-screen.bg-gray-50 input::placeholder,
+.dark main.min-h-screen.bg-gray-50 textarea::placeholder {
+  color: hsl(var(--muted-foreground));
+}
