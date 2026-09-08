@@ -48,6 +48,10 @@ export default function LandingPage() {
         <div className="hero-noise absolute inset-0" />
       </div>
 
+      <div className="relative z-20 border-b border-cyan-300/20 bg-cyan-300 px-5 py-2.5 text-center text-xs font-black uppercase tracking-[0.25em] text-[#04101c] sm:text-sm">
+        Deployment test • Homepage update • 08 Sep 2026
+      </div>
+
       <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-6 sm:px-8">
         <Link href="/" className="group flex items-center gap-2.5" aria-label="DevHeaven home">
           <span className="logo-pulse grid h-10 w-10 place-items-center rounded-xl bg-cyan-300 text-[#07111f] shadow-lg shadow-cyan-400/20 transition-transform group-hover:-rotate-6">
