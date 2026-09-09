@@ -14,6 +14,6 @@ router.put("/me", authenticate, (req, res, next) => {
     if (err) return res.status(400).json({ error: err.message || "Invalid file upload" });
     next();
   });
-}, updateMyProfile);
+}, upload.validateImageContent, updateMyProfile);
 
 module.exports = router;
