@@ -18,18 +18,25 @@ const normalizeUrl = (value) => {
   }
 }
 
-const normalizeGithubUrl = (value) => {
-  const normalized = normalizeUrl(value)
-  if (!normalized) return ""
+const extractGithubUsername = (value) => {
+  const input = String(value ?? "").trim().replace(/^@/, "")
+  if (!input) return ""
+  if (/^[A-Za-z0-9-]{1,39}$/.test(input)) return input
+  const candidate = /^https?:\/\//i.test(input) ? input : `https://${input}`
   try {
-    const url = new URL(normalized)
-    if (url.hostname.toLowerCase() !== "github.com") return ""
+    const url = new URL(candidate)
+    if (!/^github\.com$/i.test(url.hostname)) return ""
     const parts = url.pathname.split("/").filter(Boolean)
     if (parts.length !== 1 || !/^[A-Za-z0-9-]{1,39}$/.test(parts[0])) return ""
-    return `https://github.com/${parts[0]}`
+    return parts[0]
   } catch {
     return ""
   }
+}
+
+const normalizeGithubUrl = (value) => {
+  const username = extractGithubUsername(value)
+  return username ? `https://github.com/${username}` : ""
 }
 
 const toPublicUser = (user) => {
@@ -154,10 +161,20 @@ const updateMyProfile = async (req, res) => {
       if (!Number.isFinite(experience) || experience < 0 || experience > 80) return res.status(400).json({ error: "Experience must be between 0 and 80" })
       updates.experience = experience
     }
-    if (["github", "linkedin", "twitter", "website"].some(key => req.body[key] !== undefined)) {
+    if (req.body.github !== undefined) {
+      const github = normalizeGithubUrl(req.body.github)
+      if (!github) return res.status(400).json({ error: "Enter a valid GitHub profile URL, for example https://github.com/username" })
       const current = await User.findById(req.user.id, "socialLinks")
       updates.socialLinks = {
-        github: req.body.github !== undefined ? normalizeGithubUrl(req.body.github) : String(current?.socialLinks?.github || ""),
+        github,
+        linkedin: req.body.linkedin !== undefined ? normalizeUrl(req.body.linkedin) : String(current?.socialLinks?.linkedin || ""),
+        twitter: req.body.twitter !== undefined ? normalizeUrl(req.body.twitter) : String(current?.socialLinks?.twitter || ""),
+        website: req.body.website !== undefined ? normalizeUrl(req.body.website) : String(current?.socialLinks?.website || ""),
+      }
+    } else if (["linkedin", "twitter", "website"].some(key => req.body[key] !== undefined)) {
+      const current = await User.findById(req.user.id, "socialLinks")
+      updates.socialLinks = {
+        github: String(current?.socialLinks?.github || ""),
         linkedin: req.body.linkedin !== undefined ? normalizeUrl(req.body.linkedin) : String(current?.socialLinks?.linkedin || ""),
         twitter: req.body.twitter !== undefined ? normalizeUrl(req.body.twitter) : String(current?.socialLinks?.twitter || ""),
         website: req.body.website !== undefined ? normalizeUrl(req.body.website) : String(current?.socialLinks?.website || ""),
