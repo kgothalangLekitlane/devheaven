@@ -67,7 +67,7 @@ router.patch("/:id", authenticate, async (req, res) => {
     if (!isRequester && !isRecipient) return res.status(403).json({ error: "Not authorized" });
     if (!["accepted", "rejected"].includes(status)) return res.status(400).json({ error: "Status must be accepted or rejected" });
     if (connection.status !== "pending") return res.status(409).json({ error: "This connection request is no longer pending" });
-    if (status === "accepted" && !isRecipient) return res.status(403).json({ error: "Only the recipient can accept a request" });
+    if (!isRecipient) return res.status(403).json({ error: "Only the recipient can accept or reject a request" });
 
     connection.status = status;
     await connection.save();
