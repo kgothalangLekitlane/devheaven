@@ -1,6 +1,8 @@
 import { io, type Socket } from "socket.io-client";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") || "http://localhost:5000";
+const SOCKET_URL = (process.env.NEXT_PUBLIC_API_URL || "https://devh-1.onrender.com")
+  .replace(/\/api\/?$/, "")
+  .replace(/\/$/, "");
 
 let socket: Socket | null = null;
 let activeToken: string | null = null;
