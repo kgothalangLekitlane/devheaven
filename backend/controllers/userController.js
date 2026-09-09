@@ -41,6 +41,28 @@ const toPublicUser = (user) => {
   return value
 }
 
+const storeProfileImage = async (file, userId) => {
+  if (!file?.buffer) return null
+  if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) throw new Error("Database is not ready for profile image upload")
+  const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: "profileImages" })
+  const filename = `${userId}-${Date.now()}`
+  const uploadStream = bucket.openUploadStream(filename, { contentType: file.mimetype, metadata: { userId: String(userId) } })
+  await new Promise((resolve, reject) => { uploadStream.on("finish", resolve).on("error", reject); uploadStream.end(file.buffer) })
+  return `gridfs:${uploadStream.id.toString()}`
+}
+
+const deleteGridFsImage = async (profileImage) => {
+  if (!profileImage?.startsWith("gridfs:")) return
+  const fileId = profileImage.slice(7)
+  if (!ObjectId.isValid(fileId) || mongoose.connection.readyState !== 1 || !mongoose.connection.db) return
+  try {
+    const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: "profileImages" })
+    await bucket.delete(new ObjectId(fileId))
+  } catch (error) {
+    console.error("Delete old avatar error:", error)
+  }
+}
+
 const searchCandidates = async (req, res) => {
   try {
     const { q, skill, location, experience } = req.query
@@ -141,15 +163,18 @@ const updateMyProfile = async (req, res) => {
         website: req.body.website !== undefined ? normalizeUrl(req.body.website) : String(current?.socialLinks?.website || ""),
       }
     }
+
+    let previousProfileImage = null
     if (req.file?.buffer) {
-      const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: "profileImages" })
-      const filename = `${req.user.id}-${Date.now()}`
-      const uploadStream = bucket.openUploadStream(filename, { contentType: req.file.mimetype, metadata: { userId: req.user.id } })
-      await new Promise((resolve, reject) => { uploadStream.on("finish", resolve).on("error", reject); uploadStream.end(req.file.buffer) })
-      updates.profileImage = `gridfs:${uploadStream.id.toString()}`
+      const current = await User.findById(req.user.id, "profileImage")
+      previousProfileImage = current?.profileImage || null
+      updates.profileImage = await storeProfileImage(req.file, req.user.id)
     }
+
     const user = await User.findByIdAndUpdate(req.user.id, { $set: updates }, { new: true, runValidators: true }).select("-password")
     if (!user) return res.status(404).json({ error: "User not found" })
+
+    if (updates.profileImage && previousProfileImage && previousProfileImage !== updates.profileImage) await deleteGridFsImage(previousProfileImage)
     res.json({ user: toPublicUser(user) })
   } catch (error) {
     console.error("Update profile error:", error)
@@ -157,4 +182,4 @@ const updateMyProfile = async (req, res) => {
   }
 }
 
-module.exports = { getUsers, getUserById, getAvatar, searchCandidates, updateMyProfile, recordProfileView };
+module.exports = { getUsers, getUserById, getAvatar, searchCandidates, updateMyProfile, recordProfileView }
