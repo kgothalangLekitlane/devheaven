@@ -26,7 +26,13 @@ const postJob = async (req, res) => {
     const min = salaryMin === "" || salaryMin == null ? undefined : Number(salaryMin)
     const max = salaryMax === "" || salaryMax == null ? undefined : Number(salaryMax)
     if (min != null && (!Number.isFinite(min) || min < 0) || max != null && (!Number.isFinite(max) || max < 0) || min != null && max != null && min > max) return res.status(400).json({ message: "Invalid salary range" })
-    const job = new Job({ title: String(title).trim(), description: String(description).trim(), recruiter: recruiterId, company: recruiter.company, location: location ? String(location).trim() : undefined, type: type || "full-time", remote: Boolean(remote), skills: normalizedSkills, salaryMin: min, salaryMax: max })
+    const normalizedRemote = remote === true || remote === "true"
+    const normalizedType = String(type || "full-time").trim().toLowerCase()
+    if (!["full-time", "part-time", "contract", "internship", "freelance"].includes(normalizedType)) return res.status(400).json({ message: "Invalid job type" })
+    const cleanTitle = String(title).trim().slice(0, 160)
+    const cleanDescription = String(description).trim().slice(0, 10000)
+    if (!cleanTitle || !cleanDescription) return res.status(400).json({ message: "Title and description cannot be empty" })
+    const job = new Job({ title: cleanTitle, description: cleanDescription, recruiter: recruiterId, company: recruiter.company, location: location ? String(location).trim().slice(0, 160) : undefined, type: normalizedType, remote: normalizedRemote, skills: normalizedSkills, salaryMin: min, salaryMax: max })
     await job.save()
     recruiter.jobs.push(job._id)
     await recruiter.save()
@@ -44,7 +50,7 @@ const getJobs = async (req, res) => {
 
 const getRecruiters = async (req, res) => {
   try {
-    const recruiters = await Recruiter.find().select("name email company jobs createdAt").sort({ createdAt: -1 }).limit(100)
+    const recruiters = await Recruiter.find().select("name company jobs createdAt").sort({ createdAt: -1 }).limit(100)
     res.json({ recruiters })
   } catch (err) { res.status(500).json({ message: "Failed to fetch recruiters" }) }
 }
