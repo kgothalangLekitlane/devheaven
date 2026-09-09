@@ -9,8 +9,23 @@ export const assetUrl = (value?: string | null) => {
 async function request(path: string, options: RequestInit = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);
+  const callerSignal = options.signal;
+  let callerAbortHandler: (() => void) | undefined;
+
+  if (callerSignal) {
+    if (callerSignal.aborted) controller.abort(callerSignal.reason);
+    else {
+      callerAbortHandler = () => controller.abort(callerSignal.reason);
+      callerSignal.addEventListener("abort", callerAbortHandler, { once: true });
+    }
+  }
+
   try {
-    const res = await fetch(`${API_URL}${path}`, { ...options, signal: options.signal ?? controller.signal, headers: { Accept: "application/json", ...(options.headers || {}) } });
+    const res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: { Accept: "application/json", ...(options.headers || {}) },
+    });
     let body: any = null;
     try { body = await res.json(); } catch {}
     if (!res.ok) { const error = new Error(body?.error || body?.message || `Request failed (${res.status})`); (error as Error & { status?: number }).status = res.status; throw error; }
@@ -19,7 +34,10 @@ async function request(path: string, options: RequestInit = {}) {
     if (error instanceof DOMException && error.name === "AbortError") throw new Error("The request timed out. Please check your connection and try again.");
     if (error instanceof TypeError) throw new Error("Unable to reach the DevHeaven API. Please check your connection and try again.");
     throw error;
-  } finally { clearTimeout(timeout); }
+  } finally {
+    clearTimeout(timeout);
+    if (callerSignal && callerAbortHandler) callerSignal.removeEventListener("abort", callerAbortHandler);
+  }
 }
 
 const authHeaders = (token: string) => ({ Authorization: `Bearer ${token}` });
@@ -52,7 +70,7 @@ export async function markAllNotificationsRead(token: string) { return request("
 export async function fetchRecruiters() { return request("/api/recruiters"); }
 export async function fetchResources() { return request("/api/resources"); }
 export async function addResource(data: Record<string, unknown>, token: string) { return request("/api/resources", { method: "POST", headers: { ...authHeaders(token), "Content-Type": "application/json" }, body: JSON.stringify(data) }); }
-export async function fetchJobs(params: { q?: string; location?: string; type?: string; remote?: boolean; skill?: string; status?: string; page?: number; limit?: number } = {}) { const query = new URLSearchParams(); Object.entries(params).forEach(([key, value]) => { if (value !== undefined && value !== "" && value !== false) query.set(key, String(value)); }); return request(`/api/jobs${query.toString() ? `?${query}` : ""}`); }
+export async function fetchJobs(params: { q?: string; location?: string; type?: string; remote?: boolean; skill?: string; status?: string; page?: number; limit?: number } = {}) { const query = new URLSearchParams(); Object.entries(params).forEach(([key, value]) => { if (value !== undefined && value !== "") query.set(key, String(value)); }); return request(`/api/jobs${query.toString() ? `?${query}` : ""}`); }
 export async function fetchJob(jobId: string) { return request(`/api/jobs/${encodeURIComponent(jobId)}`); }
 export async function fetchRecommendedJobs(token: string) { return request("/api/jobs/recommended", { headers: authHeaders(token) }); }
 export async function fetchSavedJobs(token: string) { return request("/api/jobs/saved", { headers: authHeaders(token) }); }
