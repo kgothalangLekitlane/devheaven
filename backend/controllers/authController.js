@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
+const mongoose = require("mongoose");
+const { GridFSBucket } = require("mongodb");
 
 const getJwtSecret = () => {
   if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not configured");
@@ -23,6 +25,27 @@ const publicUser = (user) => ({
   createdAt: user.createdAt,
 });
 
+const storeProfileImage = async (file, userId) => {
+  if (!file?.buffer) return null;
+  if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
+    throw new Error("Database is not ready for profile image upload");
+  }
+
+  const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: "profileImages" });
+  const filename = `${userId}-${Date.now()}`;
+  const uploadStream = bucket.openUploadStream(filename, {
+    contentType: file.mimetype,
+    metadata: { userId: String(userId) },
+  });
+
+  await new Promise((resolve, reject) => {
+    uploadStream.on("finish", resolve).on("error", reject);
+    uploadStream.end(file.buffer);
+  });
+
+  return `gridfs:${uploadStream.id.toString()}`;
+};
+
 const registerUser = async (req, res) => {
   try {
     const { firstName, lastName, email, username, password, timezone } = req.body;
@@ -42,9 +65,22 @@ const registerUser = async (req, res) => {
       email: normalizedEmail,
       username: normalizedUsername,
       password: await bcrypt.hash(password, 12),
-      profileImage: req.file ? `/uploads/${req.file.filename}` : null,
       timezone: timezone || undefined,
     });
+
+    try {
+      if (req.file) {
+        const profileImage = await storeProfileImage(req.file, user._id);
+        if (profileImage) {
+          user.profileImage = profileImage;
+          await user.save();
+        }
+      }
+    } catch (uploadError) {
+      await user.deleteOne();
+      throw uploadError;
+    }
+
     res.status(201).json({ message: "User registered", user: publicUser(user) });
   } catch (error) {
     console.error(error);
