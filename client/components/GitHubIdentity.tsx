@@ -1,11 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { Github, Star, GitFork, ExternalLink, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getMyGithub } from "@/lib/api"
+import { getGithubUser, getMyGithub } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 
 type Repo = {
@@ -35,8 +34,23 @@ type GithubData = {
   languages: Record<string, number>
 }
 
+const extractGithubUsername = (value?: string) => {
+  const raw = String(value || "").trim()
+  if (!raw) return ""
+  const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+  try {
+    const url = new URL(candidate)
+    if (!/^(www\.)?github\.com$/i.test(url.hostname)) return ""
+    const parts = url.pathname.split("/").filter(Boolean)
+    if (parts.length !== 1 || !/^[A-Za-z0-9-]{1,39}$/.test(parts[0])) return ""
+    return parts[0]
+  } catch {
+    return ""
+  }
+}
+
 export default function GitHubIdentity() {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
   const [data, setData] = useState<GithubData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -46,12 +60,31 @@ export default function GitHubIdentity() {
       setLoading(false)
       return
     }
+
     setLoading(true)
     setError("")
+
+    const savedGithubUrl = user?.socialLinks?.github
+    const username = extractGithubUsername(savedGithubUrl)
+
+    if (!username) {
+      setData(null)
+      setError("Add your GitHub profile URL in Edit Profile first (for example, https://github.com/username).")
+      setLoading(false)
+      return
+    }
+
     try {
-      setData(await getMyGithub(token))
-    } catch (e: any) {
-      setError(e.message || "Unable to load GitHub profile")
+      // Prefer the public endpoint derived from the URL currently held by the
+      // authenticated profile. This avoids stale /api/github/me state.
+      setData(await getGithubUser(username))
+    } catch (publicError: any) {
+      // Keep the authenticated endpoint as a fallback for older deployments.
+      try {
+        setData(await getMyGithub(token))
+      } catch (authError: any) {
+        setError(publicError?.message || authError?.message || "Unable to load GitHub profile")
+      }
     } finally {
       setLoading(false)
     }
@@ -59,7 +92,7 @@ export default function GitHubIdentity() {
 
   useEffect(() => {
     load()
-  }, [token])
+  }, [token, user?.socialLinks?.github])
 
   if (loading) {
     return <Card><CardContent className="p-6">Loading GitHub profile...</CardContent></Card>
