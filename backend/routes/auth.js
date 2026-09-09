@@ -11,7 +11,7 @@ router.post("/register", (req, res, next) => {
     }
     next();
   });
-}, registerUser);
+}, upload.validateImageContent, registerUser);
 router.post("/login", loginUser);
 router.get("/me", authenticate, getCurrentUser);
 
