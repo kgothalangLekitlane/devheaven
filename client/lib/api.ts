@@ -1,12 +1,20 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://devh-1.onrender.com").replace(/\/$/, "");
+const getApiUrl = () => {
+  const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (!configuredUrl) {
+    throw new Error("NEXT_PUBLIC_API_URL is not configured. Set it to your deployed DevHeaven API URL.");
+  }
+  return configuredUrl.replace(/\/$/, "");
+};
 
 export const assetUrl = (value?: string | null) => {
   if (!value) return "";
   if (/^(https?:)?\/\//i.test(value)) return value;
-  return `${API_URL}${value.startsWith("/") ? value : `/${value}`}`;
+  const apiUrl = getApiUrl();
+  return `${apiUrl}${value.startsWith("/") ? value : `/${value}`}`;
 };
 
 async function request(path: string, options: RequestInit = {}) {
+  const apiUrl = getApiUrl();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);
   const callerSignal = options.signal;
@@ -21,7 +29,7 @@ async function request(path: string, options: RequestInit = {}) {
   }
 
   try {
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await fetch(`${apiUrl}${path}`, {
       ...options,
       signal: controller.signal,
       headers: { Accept: "application/json", ...(options.headers || {}) },
