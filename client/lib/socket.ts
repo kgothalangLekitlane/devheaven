@@ -1,8 +1,12 @@
 import { io, type Socket } from "socket.io-client";
 
-const SOCKET_URL = (process.env.NEXT_PUBLIC_API_URL || "https://devh-1.onrender.com")
-  .replace(/\/api\/?$/, "")
-  .replace(/\/$/, "");
+const getSocketUrl = () => {
+  const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (!configuredUrl) {
+    throw new Error("NEXT_PUBLIC_API_URL is not configured. Set it to your deployed DevHeaven API URL.");
+  }
+  return configuredUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
+};
 
 let socket: Socket | null = null;
 let activeToken: string | null = null;
@@ -16,7 +20,7 @@ export function getSocket(token: string): Socket {
   }
 
   activeToken = token;
-  socket = io(SOCKET_URL, {
+  socket = io(getSocketUrl(), {
     transports: ["websocket", "polling"],
     auth: { token },
     autoConnect: true,
